@@ -20,7 +20,7 @@
       </div>
       <div id="status-banner">MATCH 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
       <div class="top-actions">
-        <button id="btn-replay" class="pill-btn" title="Session Bet History & Replay">↺ REPLAY</button>
+        <button id="btn-replay" class="pill-btn" title="Pragmatic Style Round Replay">↺ REPLAY</button>
         <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
         <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
         <button id="social-toggle" title="Switch Standard / Stake.us Social">STANDARD</button>
@@ -173,44 +173,42 @@
     </div>
   </div>
 
-  <!-- Dedicated Overlay Replay Cinema Modal (Stake Session History & Single-Round Replay) -->
+  <!-- Pragmatic-Style Compact Square/Framed Replay Overlay -->
   <div id="replay-modal" class="modal-overlay hidden">
-    <div class="modal-card replay-cinema-card">
-      <div class="modal-header">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="replay-live-dot"></span>
-          <h2 id="replay-modal-title">SESSION BET HISTORY &amp; REPLAY</h2>
+    <div class="pragmatic-replay-box">
+      <!-- Top Bar -->
+      <div class="pr-header">
+        <div class="pr-title-wrap">
+          <span class="pr-dot"></span>
+          <span>AETHER DIAL — REPLAY</span>
         </div>
-        <button id="btn-replay-close" class="icon-btn" title="Close Replay">✕</button>
+        <select id="replay-round-select" class="pr-select"></select>
+        <button id="btn-replay-close" class="pr-close-btn" title="Close Replay">✕</button>
       </div>
 
-      <!-- Round Selector Bar for the Entire Active Session -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;background:#0a0614;padding:8px 10px;border-radius:10px;border:1px solid var(--gold-mid);">
-        <span style="font-family:var(--font-fantasy);font-size:0.72rem;color:var(--gold-bright);">SELECT ROUND:</span>
-        <select id="replay-round-select" style="flex:1;background:#1c1338;color:#fff;border:1px solid var(--gold-mid);border-radius:8px;padding:5px 8px;font-family:var(--font-fantasy);font-size:0.74rem;cursor:pointer;"></select>
+      <!-- Center: Live Mirror of Actual Gameplay Screen -->
+      <div class="pr-viewport">
+        <canvas id="replay-canvas" width="540" height="540"></canvas>
+
+        <!-- Floating HUD Badges matching live game -->
+        <div id="pr-hud-fs" class="pr-hud-pill top-left">FREE SPINS: 0</div>
+        <div id="pr-hud-mult" class="pr-hud-pill top-right">MULT: 1x</div>
+        <div id="pr-hud-status" class="pr-hud-banner">SPIN 1 / 1</div>
+
+        <!-- Win / Scatter Celebration Overlay inside Replay -->
+        <div id="pr-celebration" class="pr-celeb hidden">
+          <div id="pr-celeb-title" class="pr-celeb-t">SCATTER!</div>
+          <div id="pr-celeb-val" class="pr-celeb-v">+8 FREE SPINS</div>
+        </div>
       </div>
 
-      <div class="replay-stage-grid">
-        <div class="replay-canvas-box">
-          <canvas id="replay-canvas" width="420" height="420"></canvas>
-          <div id="replay-step-badge">SPIN 1 / 1</div>
-        </div>
-
-        <div class="replay-sidebar">
-          <div class="replay-summary-box">
-            <div><span>ROUND ID:</span> <strong id="rep-round-id">#1</strong></div>
-            <div><span>MODE:</span> <strong id="rep-mode">BASE SPIN</strong></div>
-            <div><span>BET:</span> <strong id="rep-bet">1.00</strong></div>
-            <div><span>TOTAL WIN:</span> <strong id="rep-total-win" style="color:#18ff82;">0.00</strong></div>
-          </div>
-
-          <div id="replay-log-list" class="replay-log"></div>
-
-          <div class="modal-actions" style="margin-top:auto;">
-            <button id="btn-replay-restart" class="brass-btn confirm-green">↻ WATCH AGAIN</button>
-            <button id="btn-replay-close-bottom" class="brass-btn">CLOSE</button>
-          </div>
-        </div>
+      <!-- Bottom Pragmatic Control & Win Bar -->
+      <div class="pr-footer">
+        <div class="pr-stat"><span>MODE</span><strong id="rep-mode">BASE</strong></div>
+        <div class="pr-stat"><span>BET</span><strong id="rep-bet">1.00</strong></div>
+        <div class="pr-stat"><span>SPIN</span><strong id="pr-step-txt">1 / 1</strong></div>
+        <div class="pr-stat win"><span>TOTAL WIN</span><strong id="rep-total-win">0.00</strong></div>
+        <button id="btn-replay-restart" class="pr-btn-watch">↻ WATCH AGAIN</button>
       </div>
     </div>
   </div>
