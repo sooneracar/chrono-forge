@@ -1,0 +1,41 @@
+name: Build Aether Dial Stake Engine Release Packages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'math/**'
+      - 'frontend/**'
+      - '.github/workflows/build-stake-release.yml'
+  workflow_dispatch:
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Aether Dial Math SDK Simulation & Generate Lookup Tables
+        run: |
+          python math/generate_lookup.py
+          ls -lh math/output/
+
+      - name: Package Stake Engine Math ZIP & Frontend ZIP
+        run: |
+          mkdir -p release_zips
+          cd math/output && zip -r ../../release_zips/aether-dial-math-sdk.zip . && cd ../..
+          cd frontend && zip -r ../release_zips/aether-dial-frontend.zip . -x "*.gitkeep" && cd ..
+
+      - name: Upload Ready-to-Publish Stake Engine ZIP Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHER-DIAL-STAKE-ENGINE-RELEASE
+          path: release_zips/*.zip
+          retention-days: 30
