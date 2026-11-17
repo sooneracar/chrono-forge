@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Chrono-Forge | Steampunk Clockwork Engine</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrapper">
+    <!-- Top Header & Mode Banner -->
+    <header id="top-bar">
+      <div class="title-plate">
+        <span class="rivet"></span>
+        <h1>CHRONO-FORGE</h1>
+        <span class="rivet"></span>
+      </div>
+      <div id="status-banner">ALIGN 3 SYMBOLS ON ANY POINTER (12, 3, 6, 9)</div>
+      <button id="social-toggle" title="Toggle Stake.us Social Mode">MODE: STANDARD</button>
+    </header>
+
+    <!-- Main Playfield: Left Gauges | Center Clockwork Rings | Right Alchemy Tube -->
+    <main id="playfield">
+      <!-- Left Info Panel -->
+      <aside id="left-panel">
+        <div class="gauge-box">
+          <div class="gauge-label">FREE SPINS</div>
+          <div id="fs-counter" class="gauge-value">0</div>
+        </div>
+        <div class="paytable-mini">
+          <div class="pt-title">3-RING ALIGN PAYS</div>
+          <div class="pt-row"><span class="dot wild"></span> Wild Core: <b>28.0x</b></div>
+          <div class="pt-row"><span class="dot ruby"></span> Ruby: <b>16.0x</b></div>
+          <div class="pt-row"><span class="dot emerald"></span> Emerald: <b>6.5x</b></div>
+          <div class="pt-row"><span class="dot sapphire"></span> Sapphire: <b>3.2x</b></div>
+          <div class="pt-row"><span class="dot gear"></span> Brass Gear: <b>1.6x</b></div>
+          <div class="pt-row"><span class="dot spring"></span> Iron Spring: <b>0.75x</b></div>
+          <div class="pt-row"><span class="dot nut"></span> Copper Nut: <b>0.35x</b></div>
+          <div class="pt-note">3+ Keys = 8 Free Spins</div>
+        </div>
+      </aside>
+
+      <!-- Center Canvas for 3 Concentric Clockwork Gears -->
+      <section id="canvas-container">
+        <canvas id="clockwork-canvas" width="560" height="560"></canvas>
+      </section>
+
+      <!-- Right Alchemy Multiplier Tube -->
+      <aside id="right-panel">
+        <div class="tube-header">ALCHEMY</div>
+        <div id="multiplier-tube">
+          <div class="mult-step" data-idx="9">100x</div>
+          <div class="mult-step" data-idx="8">50x</div>
+          <div class="mult-step" data-idx="7">35x</div>
+          <div class="mult-step" data-idx="6">20x</div>
+          <div class="mult-step" data-idx="5">12x</div>
+          <div class="mult-step" data-idx="4">8x</div>
+          <div class="mult-step" data-idx="3">5x</div>
+          <div class="mult-step" data-idx="2">3x</div>
+          <div class="mult-step" data-idx="1">2x</div>
+          <div class="mult-step active" data-idx="0">1x</div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Bottom Brass Control Deck -->
+    <footer id="control-deck">
+      <div class="meter-box">
+        <span id="lbl-balance" class="meter-label">BALANCE</span>
+        <span id="val-balance" class="meter-num">1,000.00</span>
+      </div>
+
+      <div class="bet-controls">
+        <button id="btn-bet-down" class="brass-btn small">-</button>
+        <div class="meter-box compact">
+          <span id="lbl-bet" class="meter-label">BET</span>
+          <span id="val-bet" class="meter-num">1.00</span>
+        </div>
+        <button id="btn-bet-up" class="brass-btn small">+</button>
+      </div>
+
+      <button id="btn-spin" class="spin-medallion">
+        <span id="lbl-spin">SPIN</span>
+        <small>SPACE</small>
+      </button>
+
+      <button id="btn-turbo" class="brass-btn">TURBO: OFF</button>
+
+      <div class="meter-box">
+        <span id="lbl-win" class="meter-label">WIN</span>
+        <span id="val-win" class="meter-num highlight">0.00</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
