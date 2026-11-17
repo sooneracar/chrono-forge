@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Chrono-Forge | 3D Grand Clockwork</title>
+  <title>Chrono-Forge | 3D Royal Alchemy</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="game-wrapper">
-    <!-- Top Bar -->
+    <!-- Top Ornate Header -->
     <header id="top-bar">
       <div class="title-plate">
-        <span class="gem-rivet"></span>
+        <span class="gem-rivet ruby"></span>
         <h1>CHRONO-FORGE</h1>
-        <span class="gem-rivet"></span>
+        <span class="gem-rivet emerald"></span>
       </div>
-      <div id="status-banner">ALIGN 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
+      <div id="status-banner">MATCH 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
       <div class="top-actions">
         <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
         <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
@@ -23,7 +23,7 @@
       </div>
     </header>
 
-    <!-- Main Playfield -->
+    <!-- Main 3D Stage -->
     <main id="playfield">
       <!-- Left Panel -->
       <aside id="left-panel">
@@ -32,30 +32,31 @@
           <div id="fs-counter" class="gauge-value">0</div>
         </div>
 
-        <button id="btn-bonus-buy" class="bonus-buy-card">
-          <span id="lbl-buy-title" class="buy-title">BUY FREE SPINS</span>
+        <button id="btn-bonus-buy" class="bonus-buy-3d">
+          <span class="buy-shine"></span>
+          <span id="lbl-buy-title" class="buy-title">⚡ BUY FREE SPINS ⚡</span>
           <span class="buy-sub">3+ SCATTER KEYS GUARANTEED</span>
           <span id="val-buy-cost" class="buy-price">100.00</span>
         </button>
 
         <div class="paytable-visual">
-          <div class="pt-title">3-RING ALIGN PAYOUTS</div>
+          <div class="pt-title">SYMBOL PAYOUTS (3-ALIGN)</div>
           <div id="visual-paytable-list"></div>
           <div class="pt-scatter-box">
             <canvas class="mini-sym" data-sym="KEY" width="30" height="30"></canvas>
             <div>
-              <strong>3+ KEYS ON POINTERS</strong>
+              <strong>3+ GOLDEN KEYS = SCATTER</strong>
               <span>Unlocks 8 Free Spins!</span>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Center 3D Clockwork Stage -->
+      <!-- Center 3D Clockwork Canvas -->
       <section id="canvas-container">
         <canvas id="clockwork-canvas" width="640" height="640"></canvas>
 
-        <!-- 3D Extruded Big Win / Mega Win / Max Win Celebration Overlay -->
+        <!-- 3D Extruded Big Win Celebration -->
         <div id="big-win-banner" class="hidden">
           <div class="sunburst-bg"></div>
           <div id="big-win-tier" class="text-3d-gold">BIG WIN!</div>
@@ -63,7 +64,7 @@
         </div>
       </section>
 
-      <!-- Right Panel: Alchemy Vial -->
+      <!-- Right Panel: Glowing Alchemy Tube -->
       <aside id="right-panel">
         <div class="tube-header">ALCHEMY</div>
         <div id="multiplier-tube">
@@ -81,21 +82,21 @@
       </aside>
     </main>
 
-    <!-- Bottom Control Deck -->
+    <!-- Bottom 3D Bevelled Control Deck -->
     <footer id="control-deck">
       <div class="deck-group">
-        <div class="meter-box">
+        <div class="meter-3d">
           <span id="lbl-balance" class="meter-label">CREDIT</span>
           <span id="val-balance" class="meter-num">1,000.00</span>
         </div>
-        <div class="meter-box">
+        <div class="meter-3d">
           <span id="lbl-bet" class="meter-label">BET</span>
           <span id="val-bet" class="meter-num">1.00</span>
         </div>
       </div>
 
-      <div class="meter-box win-center">
-        <span id="lbl-win" class="meter-label">WIN</span>
+      <div class="meter-3d win-center">
+        <span id="lbl-win" class="meter-label">TOTAL WIN</span>
         <span id="val-win" class="meter-num highlight">0.00</span>
       </div>
 
@@ -123,7 +124,7 @@
   <div id="autoplay-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>AUTOPLAY SETTINGS</h2>
-      <p>Choose automatic spin count (or hold SPACEBAR to auto-spin):</p>
+      <p>Select automatic spin count (or hold SPACEBAR to auto-spin):</p>
       <div class="auto-grid">
         <button class="auto-choice" data-spins="10">10</button>
         <button class="auto-choice" data-spins="20">20</button>
