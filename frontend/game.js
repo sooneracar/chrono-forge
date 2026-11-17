@@ -576,7 +576,7 @@ async function showScatter3DCelebration(keyCoords, spinsAwarded, isRetrigger) {
 
   const tierEl = document.getElementById('big-win-tier');
   const amtEl = document.getElementById('big-win-amount');
-  tierEl.textContent = isRetrigger ? 'SCATTER RETRIGGER!' : '3D SCATTER UNLOCKED!';
+  tierEl.textContent = isRetrigger ? 'SCATTER RETRIGGER!' : 'SCATTER!';
   amtEl.textContent = `+${spinsAwarded} FREE SPINS`;
   bigWinBanner.classList.remove('hidden');
 
