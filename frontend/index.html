@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Chrono-Forge | Grand Clockwork</title>
+  <title>Chrono-Forge | 3D Grand Clockwork</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -15,7 +15,7 @@
         <h1>CHRONO-FORGE</h1>
         <span class="gem-rivet"></span>
       </div>
-      <div id="status-banner">MATCH 3 SYMBOLS ON ANY POINTER (XII, III, VI, IX)</div>
+      <div id="status-banner">ALIGN 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
       <div class="top-actions">
         <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
         <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
@@ -25,7 +25,7 @@
 
     <!-- Main Playfield -->
     <main id="playfield">
-      <!-- Left Panel: Free Spins, Bonus Buy & Visual Icon Paytable -->
+      <!-- Left Panel -->
       <aside id="left-panel">
         <div class="gauge-box">
           <div class="gauge-label">FREE SPINS</div>
@@ -39,29 +39,31 @@
         </button>
 
         <div class="paytable-visual">
-          <div class="pt-title">SYMBOL PAYOUTS (3-ALIGN)</div>
+          <div class="pt-title">3-RING ALIGN PAYOUTS</div>
           <div id="visual-paytable-list"></div>
           <div class="pt-scatter-box">
-            <canvas class="mini-sym" data-sym="KEY" width="26" height="26"></canvas>
+            <canvas class="mini-sym" data-sym="KEY" width="30" height="30"></canvas>
             <div>
-              <strong>3+ KEYS = SCATTER</strong>
-              <span>Triggers 8 Free Spins!</span>
+              <strong>3+ KEYS ON POINTERS</strong>
+              <span>Unlocks 8 Free Spins!</span>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Center Clockwork Stage -->
+      <!-- Center 3D Clockwork Stage -->
       <section id="canvas-container">
-        <canvas id="clockwork-canvas" width="620" height="620"></canvas>
-        <!-- Pragmatic Style Big Win Overlay -->
+        <canvas id="clockwork-canvas" width="640" height="640"></canvas>
+
+        <!-- 3D Extruded Big Win / Mega Win / Max Win Celebration Overlay -->
         <div id="big-win-banner" class="hidden">
-          <div id="big-win-tier">BIG WIN!</div>
-          <div id="big-win-amount">0.00</div>
+          <div class="sunburst-bg"></div>
+          <div id="big-win-tier" class="text-3d-gold">BIG WIN!</div>
+          <div id="big-win-amount" class="text-3d-amount">0.00</div>
         </div>
       </section>
 
-      <!-- Right Panel: Glowing Alchemy Vial -->
+      <!-- Right Panel: Alchemy Vial -->
       <aside id="right-panel">
         <div class="tube-header">ALCHEMY</div>
         <div id="multiplier-tube">
@@ -79,7 +81,7 @@
       </aside>
     </main>
 
-    <!-- Bottom Pragmatic-Style Control Deck -->
+    <!-- Bottom Control Deck -->
     <footer id="control-deck">
       <div class="deck-group">
         <div class="meter-box">
@@ -117,11 +119,11 @@
     </footer>
   </div>
 
-  <!-- Autoplay Selector Popover (10, 20, 50, 70, 100, 500) -->
+  <!-- Autoplay Modal -->
   <div id="autoplay-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>AUTOPLAY SETTINGS</h2>
-      <p>Select number of automatic spins (or hold SPACEBAR to auto-spin):</p>
+      <p>Choose automatic spin count (or hold SPACEBAR to auto-spin):</p>
       <div class="auto-grid">
         <button class="auto-choice" data-spins="10">10</button>
         <button class="auto-choice" data-spins="20">20</button>
@@ -136,11 +138,11 @@
     </div>
   </div>
 
-  <!-- Bonus Buy Confirmation Modal -->
+  <!-- Bonus Buy Modal -->
   <div id="buy-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2 id="modal-buy-heading">BUY FREE SPINS</h2>
-      <p>Instantly land <b>3+ Golden Time Keys (Scatter)</b> to trigger <b>8 Grand Complication Free Spins</b> where the Alchemy Multiplier never resets!</p>
+      <p>Guarantees <b>3+ Golden Time Keys (Scatter)</b> across the 4 pointers to launch <b>8 Grand Complication Free Spins</b> with persistent multipliers.</p>
       <div class="modal-cost-box">
         <span>TOTAL COST (100x): </span>
         <strong id="modal-buy-cost-val">100.00</strong>
@@ -152,11 +154,11 @@
     </div>
   </div>
 
-  <!-- Visual Paytable & Rules Modal (i Button) -->
+  <!-- Visual Rules & Scatter Guide Modal -->
   <div id="info-modal" class="modal-overlay hidden">
     <div class="modal-card wide">
       <div class="modal-header">
-        <h2>CHRONO-FORGE — SYMBOL GUIDE &amp; GAME RULES</h2>
+        <h2>CHRONO-FORGE — SYMBOL &amp; SCATTER GUIDE</h2>
         <button id="btn-info-close" class="icon-btn">✕</button>
       </div>
       <div id="rules-content" class="rules-body"></div>
