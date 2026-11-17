@@ -1,5 +1,4 @@
-// CHRONO-FORGE — Crystal-Clear Transparent Corridors, 3D Scatter Key Beam Animation,
-// +5 Retrigger Free Spins & High-Contrast 3D Gemstones
+// CHRONO-FORGE — 8-Event Studio MP3 Sound Engine, Crystal Pointer Frames & 3D Scatter Beams
 
 const PAYTABLE = {
   NUT: 0.35,      // Coral Elixir Flask
@@ -74,7 +73,7 @@ const state = {
   soundOn: true,
   socialMode: false,
   winningPointers: [],
-  scatterCoords: [], // Stores {x, y} of triggered Scatter Keys for 3D beam animation
+  scatterCoords: [],
   scatterPulse: 0,
   autoRemaining: 0,
   spaceHoldAuto: false
@@ -93,11 +92,16 @@ const particles = Array.from({ length: 46 }, () => ({
 
 let celebrationCoins = [];
 
-// Hybrid Audio Engine (Plays frontend/sounds/*.mp3 when uploaded)
+// ============================================================================
+// 8-CHANNEL STUDIO MP3 AUDIO ENGINE (frontend/sounds/*.mp3)
+// Tracks: spin, stop, win, scatter, retrigger, buybonus, bigwin, maxwin
+// ============================================================================
 const SoundFX = {
   ctx: null,
   mp3Ready: {},
   tracks: {},
+  soundNames: ['spin', 'stop', 'win', 'scatter', 'retrigger', 'buybonus', 'bigwin', 'maxwin'],
+
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -106,7 +110,7 @@ const SoundFX = {
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
 
     if (Object.keys(this.tracks).length === 0) {
-      ['spin', 'stop', 'win', 'scatter', 'bigwin'].forEach(name => {
+      this.soundNames.forEach(name => {
         const audio = new Audio(`sounds/${name}.mp3`);
         audio.preload = 'auto';
         audio.addEventListener('canplaythrough', () => { this.mp3Ready[name] = true; }, { once: true });
@@ -114,39 +118,51 @@ const SoundFX = {
       });
     }
   },
-  play(name, pitchRate = 1.0) {
+
+  play(name, pitchRate = 1.0, volume = 0.85) {
     if (!state.soundOn) return;
     this.init();
 
+    // Play uploaded studio MP3 file if present
     if (this.mp3Ready[name] && this.tracks[name]) {
       try {
         const clone = this.tracks[name].cloneNode();
-        clone.volume = 0.8;
+        clone.volume = Math.min(Math.max(volume, 0), 1);
         clone.playbackRate = pitchRate;
         clone.play().catch(() => {});
         return;
       } catch (e) {}
     }
 
+    // Soft fallback tone only if that specific MP3 hasn't been uploaded yet
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
+    osc.type = 'sine';
+
+    const fallbackFreqs = {
+      spin: 170,
+      stop: 110,
+      win: 440 * pitchRate,
+      scatter: 587.33,
+      retrigger: 659.25,
+      buybonus: 523.25,
+      bigwin: 783.99,
+      maxwin: 1046.50
+    };
+
+    osc.frequency.setValueAtTime(fallbackFreqs[name] || 300, now);
     if (name === 'spin' || name === 'stop') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(name === 'stop' ? 115 : 175, now);
       osc.frequency.exponentialRampToValueAtTime(55, now + 0.06);
-      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.setValueAtTime(0.06, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();
       osc.stop(now + 0.06);
     } else {
-      osc.type = 'sine';
-      const freq = name === 'scatter' ? 587.33 : 440 * pitchRate;
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.11, now);
+      gain.gain.setValueAtTime(0.1, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
@@ -197,7 +213,6 @@ function updateUI(roundWin = null) {
   fsCounter.textContent = state.freeSpins;
   document.getElementById('val-buy-cost').textContent = (bet * BONUS_BUY_MULT).toFixed(2);
 
-  // Highlight border glow when Free Spins Bonus Mode is active
   if (state.freeSpins > 0) {
     gameWrapper.style.borderColor = '#18ff82';
     gameWrapper.style.boxShadow = '0 0 70px rgba(0,0,0,0.95), 0 0 38px rgba(24, 255, 130, 0.45)';
@@ -501,7 +516,7 @@ function renderRulesModal() {
 }
 
 // ============================================================================
-// CORE GAME LOGIC, 3D SCATTER ANIMATION & +5 FREE SPIN EXTENSION
+// CORE GAME LOGIC & 8-CHANNEL SOUND TRIGGERS
 // ============================================================================
 function getVisibleRing(ringArray, startPos) {
   const L = ringArray.length;
@@ -516,8 +531,7 @@ function evaluatePointers(sOut, sMid, sIn) {
   let winBase = 0;
   let keyCount = 0;
   const matchedPointers = [];
-  const keyPositions = []; // { ringRadius, pointerIndex }
-
+  const keyPositions = [];
   const ringRadii = [230, 162, 98];
 
   for (const p of POINTER_OFFSETS) {
@@ -568,10 +582,10 @@ function spawn3DCoins(count = 50) {
   }));
 }
 
-// 3D Scatter Trigger Celebration (Energy Beams from Keys + 3D Banner)
+// Scatter / Retrigger Celebration with Distinct Audio Channels
 async function showScatter3DCelebration(keyCoords, spinsAwarded, isRetrigger) {
   state.scatterCoords = keyCoords;
-  SoundFX.play('scatter');
+  SoundFX.play(isRetrigger ? 'retrigger' : 'scatter', 1.0, 0.95);
   spawn3DCoins(35);
 
   const tierEl = document.getElementById('big-win-tier');
@@ -587,21 +601,25 @@ async function showScatter3DCelebration(keyCoords, spinsAwarded, isRetrigger) {
   celebrationCoins = [];
 }
 
+// Big Win vs Max Win Distinct Audio Channels
 async function showBigWinCelebration(amount, mult) {
   if (mult < 15) return;
   const tierEl = document.getElementById('big-win-tier');
   const amtEl = document.getElementById('big-win-amount');
-  tierEl.textContent = mult >= 100 ? 'MAX / SENSATIONAL WIN!' : (mult >= 30 ? 'MEGA WIN!' : 'BIG WIN!');
+  const isMaxTier = mult >= 100;
+
+  tierEl.textContent = isMaxTier ? 'MAX WIN!' : (mult >= 30 ? 'MEGA WIN!' : 'BIG WIN!');
   bigWinBanner.classList.remove('hidden');
-  SoundFX.play('bigwin');
-  spawn3DCoins(55);
+
+  SoundFX.play(isMaxTier ? 'maxwin' : 'bigwin', 1.0, 0.95);
+  spawn3DCoins(isMaxTier ? 75 : 50);
 
   const steps = 32;
   for (let i = 1; i <= steps; i++) {
     amtEl.textContent = ((amount * i) / steps).toFixed(2);
     await sleep(38);
   }
-  await sleep(1100);
+  await sleep(1200);
   bigWinBanner.classList.add('hidden');
   celebrationCoins = [];
 }
@@ -613,9 +631,8 @@ function animateRotation(durationMs, dirOut, dirMid, dirIn) {
     const initOut = state.rotOut;
     const initMid = state.rotMid;
     const initIn = state.rotIn;
-    let lastTick = 0;
 
-    SoundFX.play('spin');
+    SoundFX.play('spin', state.turbo ? 1.25 : 1.0, 0.7);
 
     function frame(now) {
       const t = Math.min((now - start) / dur, 1);
@@ -624,18 +641,13 @@ function animateRotation(durationMs, dirOut, dirMid, dirIn) {
       state.rotMid = initMid + dirMid * ease;
       state.rotIn = initIn + dirIn * ease;
 
-      if (now - lastTick > 110) {
-        SoundFX.play('spin');
-        lastTick = now;
-      }
-
       if (t < 1) {
         requestAnimationFrame(frame);
       } else {
         state.rotOut = 0;
         state.rotMid = 0;
         state.rotIn = 0;
-        SoundFX.play('stop');
+        SoundFX.play('stop', 1.0, 0.75);
         resolve();
       }
     }
@@ -673,13 +685,17 @@ async function handleSpin(isBonusBuy = false) {
   state.winningPointers = [];
   state.scatterCoords = [];
 
+  if (isBonusBuy) {
+    SoundFX.play('buybonus', 1.0, 0.9);
+  }
+
   if (isFree) {
     state.freeSpins--;
     statusBanner.textContent = `★ FREE SPINS BONUS MODE (${state.freeSpins} LEFT) ★`;
   } else {
     state.balance -= cost;
     state.multIdx = 0;
-    statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ SCATTER KEYS...' : 'WINDING 3D CHRONOGRAPH GEARS...';
+    statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ SCATTER KEYS...' : 'WINDING CHRONOGRAPH GEARS...';
   }
   updateUI(0);
 
@@ -707,7 +723,6 @@ async function handleSpin(isBonusBuy = false) {
 
     const res = evaluatePointers(sOut, sMid, sIn);
 
-    // 3+ Scatter Keys Trigger: 8 Spins on Base, +5 Extra Spins inside Free Spins!
     if (step === 0 && res.keyCount >= 3) {
       const award = isFree ? 5 : 8;
       state.freeSpins += award;
@@ -720,7 +735,7 @@ async function handleSpin(isBonusBuy = false) {
 
     if (res.hasWin) {
       state.winningPointers = res.matchedPointers;
-      SoundFX.play('win', 1 + state.multIdx * 0.06);
+      SoundFX.play('win', 1 + state.multIdx * 0.05, 0.85);
 
       const activeMult = MULTIPLIERS[Math.min(state.multIdx, MULTIPLIERS.length - 1)];
       const stepWinMult = res.winBase * activeMult;
@@ -781,7 +796,7 @@ async function handleSpin(isBonusBuy = false) {
 }
 
 // ============================================================================
-// TRANSPARENT CRYSTAL POINTER FRAMES + 3D SCATTER BEAM RENDERER
+// RENDER LOOP
 // ============================================================================
 function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.beginPath();
@@ -839,7 +854,7 @@ function renderLoop() {
     ctx.fill();
   });
 
-  // 2. 3D Extruded Roman Numeral Outer Bezel
+  // 2. Roman Numeral Outer Bezel
   ctx.save();
   const bezelGrad = ctx.createRadialGradient(cx - 40, cy - 40, 220, cx, cy, 308);
   bezelGrad.addColorStop(0, '#3b2410');
@@ -871,7 +886,7 @@ function renderLoop() {
   }
   ctx.restore();
 
-  // 3. Deep Obsidian Velvet Gears
+  // 3. Obsidian Velvet Gears
   const rings = [
     { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#181426', cBot: '#090712', stroke: '#eab308' },
     { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#141021', cBot: '#07050d', stroke: '#ca8a04' },
@@ -925,7 +940,7 @@ function renderLoop() {
     ctx.restore();
   });
 
-  // 4. CRYSTAL-CLEAR TRANSPARENT 4-POINTER CORRIDORS (NO YELLOW FILL!)
+  // 4. Transparent Crystal 4-Pointer Frames
   POINTER_OFFSETS.forEach(p => {
     const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
     const isHit = state.winningPointers.includes(p);
@@ -934,7 +949,6 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(angle);
 
-    // Pure transparent glass frame with crisp silver-white outer glow (zero yellow tint!)
     ctx.shadowColor = isHit ? '#18ff82' : 'rgba(255, 255, 255, 0.65)';
     ctx.shadowBlur = isHit ? 22 : 10;
 
@@ -945,7 +959,6 @@ function renderLoop() {
       ctx.fill();
     }
 
-    // Crisp Double-Line Crystal Glass Border
     ctx.beginPath();
     ctx.roundRect(54, -29, 212, 58, 12);
     ctx.lineWidth = isHit ? 3.5 : 2.2;
@@ -953,7 +966,6 @@ function renderLoop() {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Corner Crystal Rivets
     ctx.fillStyle = isHit ? '#18ff82' : '#ffffff';
     [[61, -22], [259, -22], [61, 22], [259, 22]].forEach(([rx, ry]) => {
       ctx.beginPath();
@@ -961,7 +973,6 @@ function renderLoop() {
       ctx.fill();
     });
 
-    // Ornate 3D Pointer Needle on the outer bezel
     ctx.beginPath();
     ctx.moveTo(256, 0);
     ctx.lineTo(302, -16);
@@ -982,12 +993,11 @@ function renderLoop() {
     ctx.restore();
   });
 
-  // 5. 3D SCATTER KEY LASER BEAMS & PULSING RINGS (When 3+ Keys Hit!)
+  // 5. Scatter Key Laser Beams
   if (state.scatterCoords.length > 0) {
     const pulseR = 32 + Math.sin(state.scatterPulse) * 8;
     state.scatterCoords.forEach(pt => {
       ctx.save();
-      // Golden Energy Beam from each Scatter Key to the Center Core
       const beamGrad = ctx.createLinearGradient(pt.x, pt.y, cx, cy);
       beamGrad.addColorStop(0, 'rgba(253, 224, 71, 0.95)');
       beamGrad.addColorStop(1, 'rgba(24, 255, 130, 0.95)');
@@ -1000,7 +1010,6 @@ function renderLoop() {
       ctx.lineTo(cx, cy);
       ctx.stroke();
 
-      // Expanding 3D Halo Ring around each Scatter Key
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, pulseR, 0, Math.PI * 2);
       ctx.lineWidth = 3.5;
@@ -1010,7 +1019,7 @@ function renderLoop() {
     });
   }
 
-  // 6. Center 3D Tourbillon Core
+  // 6. Center Tourbillon Core
   ctx.save();
   ctx.translate(cx, cy);
   ctx.beginPath();
@@ -1036,7 +1045,7 @@ function renderLoop() {
   ctx.fill();
   ctx.restore();
 
-  // 7. 3D Gold Coins Fountain
+  // 7. Gold Coins Fountain
   celebrationCoins.forEach(coin => {
     coin.x += coin.vx;
     coin.y += coin.vy;
