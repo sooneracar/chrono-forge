@@ -1,4 +1,5 @@
-// CHRONO-FORGE — 8-Event Studio MP3 Sound Engine, Crystal Pointer Frames & 3D Scatter Beams
+// AETHER DIAL — 8-Event Studio MP3 Sound Engine, Crystal Pointer Frames,
+// 3D Scatter Beams & Stake Engine Full-Session Replay Archive
 
 const PAYTABLE = {
   NUT: 0.35,      // Coral Elixir Flask
@@ -94,7 +95,6 @@ let celebrationCoins = [];
 
 // ============================================================================
 // 8-CHANNEL STUDIO MP3 AUDIO ENGINE (frontend/sounds/*.mp3)
-// Tracks: spin, stop, win, scatter, retrigger, buybonus, bigwin, maxwin
 // ============================================================================
 const SoundFX = {
   ctx: null,
@@ -123,7 +123,6 @@ const SoundFX = {
     if (!state.soundOn) return;
     this.init();
 
-    // Play uploaded studio MP3 file if present
     if (this.mp3Ready[name] && this.tracks[name]) {
       try {
         const clone = this.tracks[name].cloneNode();
@@ -134,7 +133,6 @@ const SoundFX = {
       } catch (e) {}
     }
 
-    // Soft fallback tone only if that specific MP3 hasn't been uploaded yet
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -501,7 +499,7 @@ function renderRulesModal() {
   document.getElementById('rules-content').innerHTML = `
     <h3>1. HOW TO WIN (THE 4 CRYSTAL POINTER FRAMES)</h3>
     <p>Watch the <b>4 transparent crystal alignment frames</b> at <b>XII (12), III (3), VI (6), and IX (9) o'clock</b>. Align <b>3 matching symbols</b> across the Outer, Middle, and Inner rings inside any frame to win! Matched symbols vanish, the <b>Alchemy Multiplier</b> climbs (1x → 100x), and the rings shift clockwise (Outer +1, Middle +2, Inner +3) for chain wins.</p>
-    <h3>2. SCATTER &amp; GRAND COMPLICATION FREE SPINS (+5 RETRIGGER)</h3>
+    <h3>2. SCATTER &amp; AETHER DIAL FREE SPINS (+5 RETRIGGER)</h3>
     <p>Landing <b>3 or more Golden Time Keys</b> anywhere inside the 4 crystal pointer frames (XII, III, VI, IX) awards <b>8 Free Spins</b>! Landing <b>3 or more Golden Keys again during Free Spins extends the bonus by +5 EXTRA SPINS</b>. During Free Spins, the Alchemy Multiplier <b>never resets</b>!</p>
     <h3>3. SYMBOL GUIDE &amp; PAYOUTS (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
     ${symCardsHtml}
@@ -582,7 +580,6 @@ function spawn3DCoins(count = 50) {
   }));
 }
 
-// Scatter / Retrigger Celebration with Distinct Audio Channels
 async function showScatter3DCelebration(keyCoords, spinsAwarded, isRetrigger) {
   state.scatterCoords = keyCoords;
   SoundFX.play(isRetrigger ? 'retrigger' : 'scatter', 1.0, 0.95);
@@ -601,7 +598,6 @@ async function showScatter3DCelebration(keyCoords, spinsAwarded, isRetrigger) {
   celebrationCoins = [];
 }
 
-// Big Win vs Max Win Distinct Audio Channels
 async function showBigWinCelebration(amount, mult) {
   if (mult < 15) return;
   const tierEl = document.getElementById('big-win-tier');
@@ -1184,17 +1180,38 @@ window.addEventListener('keyup', (e) => {
 });
 
 // ============================================================================
-// STAKE ENGINE RGS & MANDATORY REPLAY INTEGRATION (AETHER DIAL - PHASE 4)
+// STAKE ENGINE RGS & FULL-SESSION REPLAY ARCHIVE (AETHER DIAL - PHASE 4)
 // ============================================================================
-let lastRoundRecord = null;
+const sessionRoundsHistory = [];
+let activeRecording = null;
+let selectedReplayRound = null;
+let replayAbortFlag = false;
+
 const btnReplay = document.getElementById('btn-replay');
+const replayModal = document.getElementById('replay-modal');
+const replayRoundSelect = document.getElementById('replay-round-select');
+const replayCanvas = document.getElementById('replay-canvas');
+const repCtx = replayCanvas.getContext('2d');
 btnReplay.disabled = true;
 
 const originalHandleSpin = handleSpin;
-handleSpin = async function (isBonusBuy = false, replayOverride = null) {
+handleSpin = async function (isBonusBuy = false) {
   if (state.isSpinning) return;
 
-  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !replayOverride) {
+  const isContinuationFreeSpin = state.freeSpins > 0 && activeRecording !== null;
+
+  if (!isContinuationFreeSpin) {
+    activeRecording = {
+      roundNumber: sessionRoundsHistory.length + 1,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      mode: isBonusBuy ? 'BONUS BUY' : 'BASE SPIN',
+      bet: getBet(),
+      totalWin: 0,
+      steps: []
+    };
+  }
+
+  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !isContinuationFreeSpin) {
     try {
       await window.StakeRGS.requestPlay(getBet(), isBonusBuy ? 'BONUS_BUY' : 'BASE');
     } catch (e) {
@@ -1203,39 +1220,184 @@ handleSpin = async function (isBonusBuy = false, replayOverride = null) {
     }
   }
 
-  const origRandom = Math.random;
-  if (replayOverride) {
-    const L = RING_OUTER.length;
-    const seq = [replayOverride.o / L, replayOverride.m / L, replayOverride.i / L];
-    let idx = 0;
-    Math.random = () => (idx < seq.length ? seq[idx++] : origRandom());
-    statusBanner.textContent = 'PLAYING CERTIFIED REPLAY...';
-  }
-
+  const balBefore = state.balance;
   await originalHandleSpin(isBonusBuy);
-  Math.random = origRandom;
 
-  if (!replayOverride) {
-    lastRoundRecord = {
-      o: state.posOut,
-      m: state.posMid,
-      i: state.posIn,
-      bet: getBet()
-    };
-    btnReplay.disabled = false;
-  }
+  const wagerDeducted = isContinuationFreeSpin ? 0 : (isBonusBuy ? getBet() * BONUS_BUY_MULT : getBet());
+  const spinNetWin = Math.max(0, Number((state.balance - (balBefore - wagerDeducted)).toFixed(2)));
 
-  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !replayOverride) {
-    await window.StakeRGS.endRound();
+  if (activeRecording) {
+    activeRecording.steps.push({
+      posOut: state.posOut,
+      posMid: state.posMid,
+      posIn: state.posIn,
+      multIdx: state.multIdx,
+      freeSpinsLeft: state.freeSpins,
+      winAmount: spinNetWin
+    });
+    activeRecording.totalWin = Number((activeRecording.totalWin + spinNetWin).toFixed(2));
+
+    if (state.freeSpins === 0) {
+      sessionRoundsHistory.unshift(activeRecording);
+      activeRecording = null;
+      btnReplay.disabled = false;
+      if (window.StakeRGS && window.StakeRGS.isLiveRGS) {
+        await window.StakeRGS.endRound();
+      }
+    }
   }
 };
 
+function drawMiniReplayDial(stepData, rotOffset = 0) {
+  const w = replayCanvas.width;
+  const h = replayCanvas.height;
+  const scale = w / 640;
+
+  repCtx.clearRect(0, 0, w, h);
+  repCtx.save();
+  repCtx.scale(scale, scale);
+
+  repCtx.beginPath();
+  repCtx.arc(320, 320, 300, 0, Math.PI * 2);
+  repCtx.fillStyle = '#d99b32';
+  repCtx.fill();
+  repCtx.beginPath();
+  repCtx.arc(320, 320, 272, 0, Math.PI * 2);
+  repCtx.fillStyle = '#090712';
+  repCtx.fill();
+
+  const rings = [
+    { data: getVisibleRing(RING_OUTER, stepData.posOut), radius: 230, slotR: 25, rot: rotOffset },
+    { data: getVisibleRing(RING_MIDDLE, stepData.posMid), radius: 162, slotR: 23, rot: -rotOffset },
+    { data: getVisibleRing(RING_INNER, stepData.posIn), radius: 98, slotR: 21, rot: rotOffset }
+  ];
+
+  rings.forEach(ring => {
+    repCtx.save();
+    repCtx.translate(320, 320);
+    repCtx.rotate(ring.rot);
+    for (let k = 0; k < 12; k++) {
+      const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
+      const sx = Math.cos(angle) * ring.radius;
+      const sy = Math.sin(angle) * ring.radius;
+      repCtx.beginPath();
+      repCtx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
+      repCtx.fillStyle = '#040308';
+      repCtx.fill();
+      repCtx.lineWidth = POINTER_OFFSETS.includes(k) ? 2.4 : 1.3;
+      repCtx.strokeStyle = POINTER_OFFSETS.includes(k) ? '#ffffff' : '#64748b';
+      repCtx.stroke();
+
+      repCtx.save();
+      repCtx.translate(sx, sy);
+      repCtx.rotate(-ring.rot);
+      drawSymbolIcon(repCtx, ring.data[k], ring.slotR * 0.9);
+      repCtx.restore();
+    }
+    repCtx.restore();
+  });
+
+  POINTER_OFFSETS.forEach(p => {
+    const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
+    repCtx.save();
+    repCtx.translate(320, 320);
+    repCtx.rotate(angle);
+    repCtx.beginPath();
+    repCtx.roundRect(54, -29, 212, 58, 12);
+    repCtx.lineWidth = 2.5;
+    repCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    repCtx.stroke();
+    repCtx.restore();
+  });
+
+  repCtx.restore();
+}
+
+function populateReplayDropdown() {
+  replayRoundSelect.innerHTML = '';
+  sessionRoundsHistory.forEach((rec, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `Round #${rec.roundNumber} [${rec.timestamp}] — ${rec.mode} (${rec.steps.length} Spin) | Win: ${rec.totalWin.toFixed(2)}`;
+    replayRoundSelect.appendChild(opt);
+  });
+}
+
+async function playOverlayReplay(record) {
+  if (!record || !record.steps.length) return;
+  replayAbortFlag = true;
+  await new Promise(r => setTimeout(r, 40));
+  replayAbortFlag = false;
+  selectedReplayRound = record;
+
+  replayModal.classList.remove('hidden');
+  document.getElementById('rep-round-id').textContent = `#${record.roundNumber}`;
+  document.getElementById('rep-mode').textContent = record.mode;
+  document.getElementById('rep-bet').textContent = record.bet.toFixed(2);
+  document.getElementById('rep-total-win').textContent = record.totalWin.toFixed(2);
+
+  const logList = document.getElementById('replay-log-list');
+  logList.innerHTML = '';
+  record.steps.forEach((st, i) => {
+    const div = document.createElement('div');
+    div.className = 'rep-log-item';
+    div.id = `rep-step-row-${i}`;
+    const multVal = MULTIPLIERS[Math.min(st.multIdx, MULTIPLIERS.length - 1)];
+    div.textContent = `Spin #${i + 1} — Mult: ${multVal}x | Win: ${st.winAmount.toFixed(2)}`;
+    logList.appendChild(div);
+  });
+
+  for (let i = 0; i < record.steps.length; i++) {
+    if (replayAbortFlag) return;
+    const step = record.steps[i];
+    document.getElementById('replay-step-badge').textContent = `SPIN ${i + 1} / ${record.steps.length}`;
+
+    document.querySelectorAll('.rep-log-item').forEach(el => el.classList.remove('active-step'));
+    const activeRow = document.getElementById(`rep-step-row-${i}`);
+    if (activeRow) {
+      activeRow.classList.add('active-step');
+      activeRow.scrollIntoView({ block: 'nearest' });
+    }
+
+    SoundFX.play('spin', 1.1, 0.65);
+    const spinFrames = 16;
+    for (let f = 1; f <= spinFrames; f++) {
+      if (replayAbortFlag) return;
+      const rot = (1 - f / spinFrames) * Math.PI * 1.5;
+      drawMiniReplayDial(step, rot);
+      await new Promise(r => setTimeout(r, 25));
+    }
+
+    drawMiniReplayDial(step, 0);
+    SoundFX.play(step.winAmount > 0 ? 'win' : 'stop', 1.0, 0.8);
+    await new Promise(r => setTimeout(r, 850));
+  }
+}
+
+function closeReplayModal() {
+  replayAbortFlag = true;
+  replayModal.classList.add('hidden');
+}
+
 btnReplay.addEventListener('click', () => {
-  if (!state.isSpinning && lastRoundRecord && state.freeSpins === 0) {
-    state.balance += getBet();
-    handleSpin(false, lastRoundRecord);
+  if (!state.isSpinning && sessionRoundsHistory.length > 0 && state.freeSpins === 0) {
+    populateReplayDropdown();
+    playOverlayReplay(sessionRoundsHistory[0]);
   }
 });
+
+replayRoundSelect.addEventListener('change', (e) => {
+  const idx = parseInt(e.target.value, 10);
+  if (sessionRoundsHistory[idx]) {
+    playOverlayReplay(sessionRoundsHistory[idx]);
+  }
+});
+
+document.getElementById('btn-replay-restart').addEventListener('click', () => {
+  if (selectedReplayRound) playOverlayReplay(selectedReplayRound);
+});
+document.getElementById('btn-replay-close').addEventListener('click', closeReplayModal);
+document.getElementById('btn-replay-close-bottom').addEventListener('click', closeReplayModal);
 
 (async function bootStakeSession() {
   if (!window.StakeRGS) return;
@@ -1245,8 +1407,13 @@ btnReplay.addEventListener('click', () => {
   if (session.replay) {
     document.getElementById('replay-ribbon').classList.remove('hidden');
     const parsed = window.StakeRGS.parseReplayData();
-    if (parsed) {
-      setTimeout(() => handleSpin(false, parsed), 600);
+    if (parsed && parsed.steps) {
+      parsed.roundNumber = parsed.roundNumber || 1;
+      parsed.timestamp = parsed.timestamp || 'CERTIFIED';
+      sessionRoundsHistory.unshift(parsed);
+      btnReplay.disabled = false;
+      populateReplayDropdown();
+      setTimeout(() => playOverlayReplay(parsed), 500);
     }
   }
   updateUI(0);
