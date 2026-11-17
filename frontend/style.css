@@ -13,13 +13,14 @@
   padding: 0;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
   background: radial-gradient(circle at 50% 42%, #3b1d5e 0%, #191338 48%, #090617 100%);
   color: var(--text-light);
   font-family: var(--font-fantasy);
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -29,7 +30,7 @@ body {
 #game-wrapper {
   width: 100%;
   max-width: 1180px;
-  height: 100vh;
+  height: 100dvh;
   max-height: 820px;
   display: flex;
   flex-direction: column;
@@ -54,6 +55,7 @@ body {
   gap: 10px;
   padding-bottom: 7px;
   border-bottom: 1.5px solid rgba(255, 215, 110, 0.35);
+  flex-shrink: 0;
 }
 
 .title-plate {
@@ -171,6 +173,7 @@ body {
   justify-content: space-between;
   gap: 14px;
   min-height: 0;
+  overflow: hidden;
 }
 
 #left-panel {
@@ -178,6 +181,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 9px;
+  flex-shrink: 0;
 }
 
 .gauge-box {
@@ -357,6 +361,7 @@ body {
   justify-content: center;
   align-items: center;
   min-width: 0;
+  min-height: 0;
 }
 
 #clockwork-canvas {
@@ -446,6 +451,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .tube-header {
@@ -497,6 +503,7 @@ body {
   gap: 10px;
   padding-top: 8px;
   border-top: 2px solid rgba(255, 215, 110, 0.35);
+  flex-shrink: 0;
 }
 
 .deck-group {
@@ -789,8 +796,8 @@ body {
    PRAGMATIC-STYLE COMPACT SQUARE FRAMED REPLAY OVERLAY
    ============================================================================ */
 .pragmatic-replay-box {
-  width: min(560px, 92vw);
-  max-height: 92vh;
+  width: min(560px, 94vw);
+  max-height: 92dvh;
   background: linear-gradient(180deg, #1f163b 0%, #0d081c 100%);
   border: 2.5px solid #fde047;
   border-radius: 16px;
@@ -863,7 +870,7 @@ body {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-height: calc(92vh - 96px);
+  max-height: calc(92dvh - 105px);
   background: radial-gradient(circle, #2a1747 0%, #090617 100%);
   display: flex;
   justify-content: center;
@@ -972,189 +979,245 @@ body {
   cursor: pointer;
 }
 
-@media (max-width: 820px) {
-  #left-panel { display: none; }
-  .meter-3d { min-width: 82px; padding: 5px 6px; }
-  .spin-medallion { width: 68px; height: 68px; }
-}
-
-/* Stake Engine Small Popout Window (e.g. 400x225) */
-@media (max-height: 420px), (max-width: 520px) {
-  #left-panel, #right-panel, .title-plate { display: none; }
-  #game-wrapper { padding: 4px 8px; }
-  .meter-3d { min-width: 68px; padding: 3px 5px; }
-  .meter-num { font-size: 0.85rem; }
-  .spin-medallion { width: 54px; height: 54px; }
-  #lbl-spin { font-size: 1.35rem; }
-  .spin-medallion small { display: none; }
-  .auto-btn, .brass-btn { padding: 6px 8px; font-size: 0.65rem; }
-}
 /* ============================================================================
-   MOBILE PORTRAIT & TOUCH OPTIMIZATION (SMARTPHONE VIEWPORT)
+   MOBILE PORTRAIT VIEWPORT (SMARTPHONE VERTICAL - e.g. 360x800)
    ============================================================================ */
-@media (max-width: 768px) and (min-height: 421px) {
-  body {
-    height: 100dvh;
-  }
-
+@media (max-width: 768px) and (orientation: portrait) {
   #game-wrapper {
-    height: 100dvh;
     max-height: none;
     border-radius: 0;
     border-left: none;
     border-right: none;
-    padding: 8px 10px;
+    padding: 6px 8px;
   }
 
   #top-bar {
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    gap: 4px;
+    padding-bottom: 4px;
   }
 
   .title-plate {
-    padding: 4px 14px;
+    padding: 4px 10px;
+    gap: 6px;
   }
 
   .title-plate h1 {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
+    letter-spacing: 1px;
+  }
+
+  .top-actions {
+    gap: 5px;
+  }
+
+  .icon-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.82rem;
+  }
+
+  .pill-btn, #social-toggle {
+    padding: 4px 8px;
+    font-size: 0.6rem;
   }
 
   #status-banner {
     order: 3;
     width: 100%;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     padding-top: 2px;
   }
 
   #playfield {
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 2px 0;
+  }
+
+  #left-panel {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
     gap: 6px;
   }
 
-  /* Keep Free Spins & Buy Bonus accessible in a compact top-stage row on mobile */
-  #left-panel {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-    align-items: stretch;
-    gap: 8px;
-  }
-
   #left-panel .paytable-visual {
-    display: none; /* Paytable remains accessible via 'i' button */
+    display: none;
   }
 
   .gauge-box {
-    flex: 0.8;
-    padding: 4px 6px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex: 0.7;
+    padding: 4px;
+    border-radius: 10px;
   }
 
-  .gauge-value {
-    font-size: 1.15rem;
-  }
+  .gauge-label { font-size: 0.56rem; }
+  .gauge-value { font-size: 1.05rem; }
 
   .bonus-buy-3d {
-    flex: 1.4;
-    padding: 6px 8px;
+    flex: 1.5;
+    padding: 6px 10px;
+    border-radius: 12px;
     flex-direction: row;
     justify-content: space-between;
   }
 
-  .buy-sub {
-    display: none;
-  }
-
-  .buy-title {
-    font-size: 0.72rem;
-  }
-
+  .buy-sub { display: none; }
+  .buy-title { font-size: 0.68rem; }
   .buy-price {
     margin-top: 0;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     padding: 2px 10px;
   }
 
-  /* Horizontal Alchemy Multiplier Strip on Mobile */
+  #canvas-container {
+    width: 100%;
+    flex: 1;
+    min-height: 250px;
+  }
+
   #right-panel {
     width: 100%;
     flex-direction: row;
-    justify-content: center;
-    gap: 4px;
+    gap: 0;
   }
 
-  .tube-header {
-    display: none;
-  }
+  .tube-header { display: none; }
 
   #multiplier-tube {
     width: 100%;
     flex-direction: row-reverse;
     justify-content: space-between;
-    border-radius: 12px;
-    padding: 4px;
+    border-radius: 10px;
+    padding: 3px 4px;
+    gap: 2px;
   }
 
   .mult-step {
     flex: 1;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     padding: 3px 0;
   }
 
-  /* Two-row Touch Control Deck */
   #control-deck {
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 6px;
     padding-top: 6px;
   }
 
-  .deck-group {
-    width: 58%;
+  .deck-group, .meter-3d.win-center {
+    width: 100%;
+  }
+
+  /* Put Credit, Bet, Total Win on a single neat 3-column row */
+  #control-deck {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 6px;
+  }
+
+  .deck-group {
+    grid-column: 1 / 2;
+    gap: 5px;
+  }
+
+  .meter-3d.win-center {
+    grid-column: 2 / 3;
+    min-width: 0;
   }
 
   .meter-3d {
     min-width: 0;
     flex: 1;
-    padding: 5px 6px;
+    padding: 4px 5px;
+    border-radius: 10px;
   }
 
-  .meter-3d.win-center {
-    width: 39%;
-    min-width: 0;
-    padding: 5px 6px;
-  }
-
-  .meter-num, .meter-num.highlight {
-    font-size: 0.92rem;
-  }
+  .meter-label { font-size: 0.55rem; }
+  .meter-num, .meter-num.highlight { font-size: 0.88rem; }
 
   .spin-cluster {
+    grid-column: 1 / 3;
     width: 100%;
     justify-content: space-between;
-    padding-top: 2px;
+    gap: 5px;
+  }
+
+  .round-ctrl {
+    width: 36px;
+    height: 36px;
+    font-size: 1.15rem;
   }
 
   .spin-medallion {
-    width: 68px;
-    height: 68px;
+    width: 66px;
+    height: 66px;
   }
 
-  #lbl-spin {
-    font-size: 1.55rem;
-  }
-
-  .spin-medallion small {
-    display: none;
-  }
+  #lbl-spin { font-size: 1.55rem; }
+  .spin-medallion small { display: none; }
 
   .auto-btn, .brass-btn {
-    padding: 8px 10px;
-    font-size: 0.68rem;
+    padding: 8px 8px;
+    font-size: 0.62rem;
+    border-radius: 10px;
   }
+
+  .rules-sym-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .text-3d-gold { font-size: 2rem; }
+  .text-3d-amount { font-size: 2.3rem; }
+}
+
+/* ============================================================================
+   MOBILE LANDSCAPE VIEWPORT (SMARTPHONE HORIZONTAL - e.g. 800x360)
+   ============================================================================ */
+@media (max-height: 450px) and (orientation: landscape) {
+  #game-wrapper {
+    padding: 4px 10px;
+    border-radius: 0;
+  }
+
+  #top-bar {
+    padding-bottom: 3px;
+  }
+
+  .title-plate { padding: 3px 10px; }
+  .title-plate h1 { font-size: 0.8rem; }
+  #status-banner { font-size: 0.68rem; }
+  .icon-btn { width: 28px; height: 28px; font-size: 0.8rem; }
+  .pill-btn, #social-toggle { padding: 3px 8px; font-size: 0.58rem; }
+
+  #left-panel {
+    width: 145px;
+    gap: 6px;
+  }
+
+  #left-panel .paytable-visual { display: none; }
+  .gauge-box { padding: 4px; }
+  .gauge-value { font-size: 1.1rem; }
+  .bonus-buy-3d { padding: 6px; }
+  .buy-sub { display: none; }
+  .buy-title { font-size: 0.65rem; }
+  .buy-price { font-size: 0.82rem; padding: 2px 10px; }
+
+  #right-panel { width: 64px; }
+  .tube-header { font-size: 0.58rem; }
+  #multiplier-tube { width: 54px; padding: 3px; gap: 1px; }
+  .mult-step { font-size: 0.58rem; padding: 1px 0; }
+
+  #control-deck { padding-top: 4px; }
+  .meter-3d { min-width: 82px; padding: 3px 6px; }
+  .meter-3d.win-center { min-width: 105px; }
+  .meter-label { font-size: 0.52rem; }
+  .meter-num, .meter-num.highlight { font-size: 0.85rem; }
+  .spin-medallion { width: 54px; height: 54px; }
+  #lbl-spin { font-size: 1.35rem; }
+  .spin-medallion small { display: none; }
+  .round-ctrl { width: 32px; height: 32px; font-size: 1rem; }
+  .auto-btn, .brass-btn { padding: 6px 8px; font-size: 0.6rem; }
 }
