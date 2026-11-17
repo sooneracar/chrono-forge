@@ -16,33 +16,44 @@
         <span class="rivet"></span>
       </div>
       <div id="status-banner">ALIGN 3 SYMBOLS ON ANY POINTER (12, 3, 6, 9)</div>
-      <button id="social-toggle" title="Toggle Stake.us Social Mode">MODE: STANDARD</button>
+      <div class="top-actions">
+        <button id="btn-sound" class="icon-btn" title="Toggle Sound">🔊</button>
+        <button id="btn-info" class="icon-btn" title="Game Rules & Paytable">i</button>
+        <button id="social-toggle" title="Toggle Stake.us Social Mode">STANDARD</button>
+      </div>
     </header>
 
-    <!-- Main Playfield: Left Gauges | Center Clockwork Rings | Right Alchemy Tube -->
+    <!-- Main Playfield: Left Gauges & Bonus Buy | Center Clockwork | Right Alchemy Tube -->
     <main id="playfield">
-      <!-- Left Info Panel -->
+      <!-- Left Info & Bonus Buy Panel -->
       <aside id="left-panel">
         <div class="gauge-box">
           <div class="gauge-label">FREE SPINS</div>
           <div id="fs-counter" class="gauge-value">0</div>
         </div>
+
+        <button id="btn-bonus-buy" class="bonus-buy-card">
+          <span id="lbl-buy-title" class="buy-title">BUY BONUS</span>
+          <span class="buy-sub">GRAND COMPLICATION</span>
+          <span id="val-buy-cost" class="buy-price">100.00</span>
+        </button>
+
         <div class="paytable-mini">
           <div class="pt-title">3-RING ALIGN PAYS</div>
-          <div class="pt-row"><span class="dot wild"></span> Wild Core: <b>28.0x</b></div>
-          <div class="pt-row"><span class="dot ruby"></span> Ruby: <b>16.0x</b></div>
-          <div class="pt-row"><span class="dot emerald"></span> Emerald: <b>6.5x</b></div>
-          <div class="pt-row"><span class="dot sapphire"></span> Sapphire: <b>3.2x</b></div>
+          <div class="pt-row"><span class="dot wild"></span> Alchemy Core: <b>28.0x</b></div>
+          <div class="pt-row"><span class="dot ruby"></span> Crimson Ruby: <b>16.0x</b></div>
+          <div class="pt-row"><span class="dot emerald"></span> Forest Emerald: <b>6.5x</b></div>
+          <div class="pt-row"><span class="dot sapphire"></span> Royal Sapphire: <b>3.2x</b></div>
           <div class="pt-row"><span class="dot gear"></span> Brass Gear: <b>1.6x</b></div>
-          <div class="pt-row"><span class="dot spring"></span> Iron Spring: <b>0.75x</b></div>
+          <div class="pt-row"><span class="dot spring"></span> Steel Spring: <b>0.75x</b></div>
           <div class="pt-row"><span class="dot nut"></span> Copper Nut: <b>0.35x</b></div>
-          <div class="pt-note">3+ Keys = 8 Free Spins</div>
+          <div class="pt-note">3+ Time Keys = 8 Free Spins</div>
         </div>
       </aside>
 
       <!-- Center Canvas for 3 Concentric Clockwork Gears -->
       <section id="canvas-container">
-        <canvas id="clockwork-canvas" width="560" height="560"></canvas>
+        <canvas id="clockwork-canvas" width="580" height="580"></canvas>
       </section>
 
       <!-- Right Alchemy Multiplier Tube -->
@@ -84,13 +95,45 @@
         <small>SPACE</small>
       </button>
 
-      <button id="btn-turbo" class="brass-btn">TURBO: OFF</button>
+      <div class="right-controls">
+        <button id="btn-mobile-buy" class="brass-btn gold-outline">BONUS (100x)</button>
+        <button id="btn-turbo" class="brass-btn">TURBO: OFF</button>
+      </div>
 
       <div class="meter-box">
         <span id="lbl-win" class="meter-label">WIN</span>
         <span id="val-win" class="meter-num highlight">0.00</span>
       </div>
     </footer>
+  </div>
+
+  <!-- Bonus Buy Confirmation Modal (Stake Engine Compliance for >2x features) -->
+  <div id="buy-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2 id="modal-buy-heading">ACTIVATE GRAND COMPLICATION</h2>
+      <p id="modal-buy-desc">Guarantee 3+ Time Keys on the next spin to trigger 8 Free Spins with persistent Alchemy multipliers.</p>
+      <div class="modal-cost-box">
+        <span id="modal-buy-cost-lbl">COST (100x):</span>
+        <strong id="modal-buy-cost-val">100.00</strong>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-buy-cancel" class="brass-btn">CANCEL</button>
+        <button id="btn-buy-confirm" class="brass-btn confirm-green">CONFIRM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Rules & Paytable Modal (Stake Engine Mandatory Info Screen) -->
+  <div id="info-modal" class="modal-overlay hidden">
+    <div class="modal-card wide">
+      <div class="modal-header">
+        <h2>CHRONO-FORGE — GAME RULES &amp; PAYTABLE</h2>
+        <button id="btn-info-close" class="icon-btn">✕</button>
+      </div>
+      <div id="rules-content" class="rules-body">
+        <!-- Populated dynamically for Standard / Social mode compliance -->
+      </div>
+    </div>
   </div>
 
   <script src="game.js"></script>
