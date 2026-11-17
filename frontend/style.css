@@ -989,3 +989,172 @@ body {
   .spin-medallion small { display: none; }
   .auto-btn, .brass-btn { padding: 6px 8px; font-size: 0.65rem; }
 }
+/* ============================================================================
+   MOBILE PORTRAIT & TOUCH OPTIMIZATION (SMARTPHONE VIEWPORT)
+   ============================================================================ */
+@media (max-width: 768px) and (min-height: 421px) {
+  body {
+    height: 100dvh;
+  }
+
+  #game-wrapper {
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 8px 10px;
+  }
+
+  #top-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .title-plate {
+    padding: 4px 14px;
+  }
+
+  .title-plate h1 {
+    font-size: 0.95rem;
+  }
+
+  #status-banner {
+    order: 3;
+    width: 100%;
+    font-size: 0.72rem;
+    padding-top: 2px;
+  }
+
+  #playfield {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  /* Keep Free Spins & Buy Bonus accessible in a compact top-stage row on mobile */
+  #left-panel {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  #left-panel .paytable-visual {
+    display: none; /* Paytable remains accessible via 'i' button */
+  }
+
+  .gauge-box {
+    flex: 0.8;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .gauge-value {
+    font-size: 1.15rem;
+  }
+
+  .bonus-buy-3d {
+    flex: 1.4;
+    padding: 6px 8px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .buy-sub {
+    display: none;
+  }
+
+  .buy-title {
+    font-size: 0.72rem;
+  }
+
+  .buy-price {
+    margin-top: 0;
+    font-size: 0.85rem;
+    padding: 2px 10px;
+  }
+
+  /* Horizontal Alchemy Multiplier Strip on Mobile */
+  #right-panel {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .tube-header {
+    display: none;
+  }
+
+  #multiplier-tube {
+    width: 100%;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .mult-step {
+    flex: 1;
+    font-size: 0.62rem;
+    padding: 3px 0;
+  }
+
+  /* Two-row Touch Control Deck */
+  #control-deck {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 6px;
+  }
+
+  .deck-group {
+    width: 58%;
+    gap: 6px;
+  }
+
+  .meter-3d {
+    min-width: 0;
+    flex: 1;
+    padding: 5px 6px;
+  }
+
+  .meter-3d.win-center {
+    width: 39%;
+    min-width: 0;
+    padding: 5px 6px;
+  }
+
+  .meter-num, .meter-num.highlight {
+    font-size: 0.92rem;
+  }
+
+  .spin-cluster {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 2px;
+  }
+
+  .spin-medallion {
+    width: 68px;
+    height: 68px;
+  }
+
+  #lbl-spin {
+    font-size: 1.55rem;
+  }
+
+  .spin-medallion small {
+    display: none;
+  }
+
+  .auto-btn, .brass-btn {
+    padding: 8px 10px;
+    font-size: 0.68rem;
+  }
+}
