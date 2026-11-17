@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Chrono-Forge | 3D Royal Alchemy</title>
- <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <title>Aether Dial | 3D Royal Alchemy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -15,16 +15,20 @@
     <header id="top-bar">
       <div class="title-plate">
         <span class="gem-rivet ruby"></span>
-        <h1>CHRONO-FORGE</h1>
+        <h1>AETHER DIAL</h1>
         <span class="gem-rivet emerald"></span>
       </div>
       <div id="status-banner">MATCH 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
       <div class="top-actions">
+        <button id="btn-replay" class="pill-btn" title="Replay Last Round">↺ REPLAY</button>
         <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
         <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
         <button id="social-toggle" title="Switch Standard / Stake.us Social">STANDARD</button>
       </div>
     </header>
+
+    <!-- Replay Mode Watermark Banner -->
+    <div id="replay-ribbon" class="hidden">REPLAY MODE — CERTIFIED ROUND PLAYBACK</div>
 
     <!-- Main 3D Stage -->
     <main id="playfield">
@@ -146,7 +150,7 @@
   <div id="buy-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2 id="modal-buy-heading">BUY FREE SPINS</h2>
-      <p>Guarantees <b>3+ Golden Time Keys (Scatter)</b> across the 4 pointers to launch <b>8 Grand Complication Free Spins</b> (+5 extra spins on retrigger) with persistent multipliers.</p>
+      <p>Guarantees <b>3+ Golden Time Keys (Scatter)</b> across the 4 pointers to launch <b>8 Aether Dial Free Spins</b> (+5 extra spins on retrigger) with persistent multipliers.</p>
       <div class="modal-cost-box">
         <span>TOTAL COST (100x): </span>
         <strong id="modal-buy-cost-val">100.00</strong>
@@ -162,13 +166,14 @@
   <div id="info-modal" class="modal-overlay hidden">
     <div class="modal-card wide">
       <div class="modal-header">
-        <h2>CHRONO-FORGE — SYMBOL &amp; SCATTER GUIDE</h2>
+        <h2>AETHER DIAL — SYMBOL &amp; SCATTER GUIDE</h2>
         <button id="btn-info-close" class="icon-btn">✕</button>
       </div>
       <div id="rules-content" class="rules-body"></div>
     </div>
   </div>
 
+  <script src="rgs-adapter.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
