@@ -1,5 +1,5 @@
 // AETHER DIAL — 8-Event Studio MP3 Sound Engine, Crystal Pointer Frames,
-// 3D Scatter Beams & Stake Engine Full-Session Replay Archive
+// 3D Scatter Beams & Pragmatic-Style Compact Square Replay System
 
 const PAYTABLE = {
   NUT: 0.35,      // Coral Elixir Flask
@@ -792,7 +792,7 @@ async function handleSpin(isBonusBuy = false) {
 }
 
 // ============================================================================
-// RENDER LOOP
+// RENDER LOOP (REUSABLE FOR BOTH MAIN STAGE & COMPACT REPLAY SCREEN)
 // ============================================================================
 function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.beginPath();
@@ -810,35 +810,229 @@ function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.fill();
 }
 
-function renderLoop() {
-  const w = canvas.width;
-  const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
+function drawClockworkDialScene(targetCtx, w, h, snap) {
+  const cx = 320;
+  const cy = 320;
+  const scale = w / 640;
 
-  state.coreAngle += state.isSpinning ? 0.06 : 0.01;
-  state.scatterPulse += 0.14;
-  ctx.clearRect(0, 0, w, h);
+  targetCtx.clearRect(0, 0, w, h);
+  targetCtx.save();
+  targetCtx.scale(scale, scale);
 
-  // 1. Ambient Sunburst & Floating Sparks
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(state.coreAngle * 0.12);
+  // 1. Ambient Sunburst
+  targetCtx.save();
+  targetCtx.translate(cx, cy);
+  targetCtx.rotate(snap.coreAngle * 0.12);
   for (let i = 0; i < 12; i++) {
-    ctx.rotate(Math.PI / 6);
-    const rayGrad = ctx.createLinearGradient(0, 0, 315, 0);
-    rayGrad.addColorStop(0, state.freeSpins > 0 ? 'rgba(24, 255, 130, 0.22)' : 'rgba(255, 220, 110, 0.2)');
+    targetCtx.rotate(Math.PI / 6);
+    const rayGrad = targetCtx.createLinearGradient(0, 0, 315, 0);
+    rayGrad.addColorStop(0, snap.freeSpins > 0 ? 'rgba(24, 255, 130, 0.22)' : 'rgba(255, 220, 110, 0.2)');
     rayGrad.addColorStop(0.6, 'rgba(139, 92, 246, 0.08)');
     rayGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
-    ctx.fillStyle = rayGrad;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(315, -22);
-    ctx.lineTo(315, 22);
-    ctx.closePath();
-    ctx.fill();
+    targetCtx.fillStyle = rayGrad;
+    targetCtx.beginPath();
+    targetCtx.moveTo(0, 0);
+    targetCtx.lineTo(315, -22);
+    targetCtx.lineTo(315, 22);
+    targetCtx.closePath();
+    targetCtx.fill();
   }
-  ctx.restore();
+  targetCtx.restore();
+
+  // 2. Roman Numeral Outer Bezel
+  targetCtx.save();
+  const bezelGrad = targetCtx.createRadialGradient(cx - 40, cy - 40, 220, cx, cy, 308);
+  bezelGrad.addColorStop(0, '#3b2410');
+  bezelGrad.addColorStop(0.55, '#d99b32');
+  bezelGrad.addColorStop(0.84, '#fff2b2');
+  bezelGrad.addColorStop(1, '#452806');
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, 306, 0, Math.PI * 2);
+  targetCtx.fillStyle = bezelGrad;
+  targetCtx.fill();
+
+  targetCtx.beginPath();
+  targetCtx.arc(cx, cy, 274, 0, Math.PI * 2);
+  targetCtx.fillStyle = '#090712';
+  targetCtx.fill();
+  targetCtx.lineWidth = 2.5;
+  targetCtx.strokeStyle = snap.freeSpins > 0 ? '#18ff82' : '#ffe89e';
+  targetCtx.stroke();
+
+  targetCtx.fillStyle = '#1c1004';
+  targetCtx.font = '900 15px Georgia, serif';
+  targetCtx.textAlign = 'center';
+  targetCtx.textBaseline = 'middle';
+  for (let k = 0; k < 12; k++) {
+    const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
+    const rx = cx + Math.cos(angle) * 290;
+    const ry = cy + Math.sin(angle) * 290;
+    targetCtx.fillText(ROMAN_NUMERALS[k], rx, ry);
+  }
+  targetCtx.restore();
+
+  // 3. Obsidian Velvet Gears
+  const rings = [
+    { data: getVisibleRing(RING_OUTER, snap.posOut), radius: 230, slotR: 25, rot: snap.rotOut, teeth: 48, cTop: '#181426', cBot: '#090712', stroke: '#eab308' },
+    { data: getVisibleRing(RING_MIDDLE, snap.posMid), radius: 162, slotR: 23, rot: snap.rotMid, teeth: 36, cTop: '#141021', cBot: '#07050d', stroke: '#ca8a04' },
+    { data: getVisibleRing(RING_INNER, snap.posIn), radius: 98, slotR: 21, rot: snap.rotIn, teeth: 24, cTop: '#100d1a', cBot: '#05040a', stroke: '#a16207' }
+  ];
+
+  rings.forEach(ring => {
+    targetCtx.save();
+    targetCtx.translate(cx, cy);
+    targetCtx.rotate(ring.rot);
+
+    drawGearTeeth(targetCtx, ring.radius + ring.slotR + 2, ring.teeth, 6, ring.stroke);
+
+    const trackGrad = targetCtx.createLinearGradient(0, -ring.radius, 0, ring.radius);
+    trackGrad.addColorStop(0, ring.cTop);
+    trackGrad.addColorStop(1, ring.cBot);
+    targetCtx.beginPath();
+    targetCtx.arc(0, 0, ring.radius + ring.slotR + 2, 0, Math.PI * 2);
+    targetCtx.fillStyle = trackGrad;
+    targetCtx.fill();
+    targetCtx.lineWidth = 2.2;
+    targetCtx.strokeStyle = ring.stroke;
+    targetCtx.stroke();
+
+    for (let k = 0; k < 12; k++) {
+      const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
+      const sx = Math.cos(angle) * ring.radius;
+      const sy = Math.sin(angle) * ring.radius;
+      const symKey = ring.data[k];
+      const isPointerSlot = POINTER_OFFSETS.includes(k);
+
+      targetCtx.beginPath();
+      targetCtx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
+      targetCtx.fillStyle = '#040308';
+      targetCtx.fill();
+      targetCtx.lineWidth = isPointerSlot ? 2.4 : 1.5;
+      targetCtx.strokeStyle = isPointerSlot ? 'rgba(255, 255, 255, 0.85)' : '#64748b';
+      targetCtx.stroke();
+
+      targetCtx.save();
+      targetCtx.translate(sx, sy);
+      targetCtx.rotate(-ring.rot);
+      drawSymbolIcon(targetCtx, symKey, ring.slotR * 0.9);
+      targetCtx.restore();
+    }
+    targetCtx.restore();
+  });
+
+  // 4. Transparent Crystal 4-Pointer Frames
+  POINTER_OFFSETS.forEach(p => {
+    const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
+    const isHit = (snap.winningPointers || []).includes(p);
+
+    targetCtx.save();
+    targetCtx.translate(cx, cy);
+    targetCtx.rotate(angle);
+
+    targetCtx.shadowColor = isHit ? '#18ff82' : 'rgba(255, 255, 255, 0.65)';
+    targetCtx.shadowBlur = isHit ? 22 : 10;
+
+    if (isHit) {
+      targetCtx.fillStyle = 'rgba(24, 255, 130, 0.22)';
+      targetCtx.beginPath();
+      targetCtx.roundRect(54, -29, 212, 58, 12);
+      targetCtx.fill();
+    }
+
+    targetCtx.beginPath();
+    targetCtx.roundRect(54, -29, 212, 58, 12);
+    targetCtx.lineWidth = isHit ? 3.5 : 2.2;
+    targetCtx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 255, 255, 0.85)';
+    targetCtx.stroke();
+    targetCtx.shadowBlur = 0;
+
+    targetCtx.fillStyle = isHit ? '#18ff82' : '#ffffff';
+    [[61, -22], [259, -22], [61, 22], [259, 22]].forEach(([rx, ry]) => {
+      targetCtx.beginPath();
+      targetCtx.arc(rx, ry, 2.3, 0, Math.PI * 2);
+      targetCtx.fill();
+    });
+
+    targetCtx.beginPath();
+    targetCtx.moveTo(256, 0);
+    targetCtx.lineTo(302, -16);
+    targetCtx.lineTo(292, 0);
+    targetCtx.lineTo(302, 16);
+    targetCtx.closePath();
+    targetCtx.fillStyle = isHit ? '#18ff82' : '#fde047';
+    targetCtx.fill();
+    targetCtx.lineWidth = 2;
+    targetCtx.strokeStyle = '#3b2406';
+    targetCtx.stroke();
+
+    targetCtx.beginPath();
+    targetCtx.arc(284, 0, 5, 0, Math.PI * 2);
+    targetCtx.fillStyle = '#ff1e56';
+    targetCtx.fill();
+
+    targetCtx.restore();
+  });
+
+  // 5. Scatter Key Laser Beams
+  if (snap.scatterCoords && snap.scatterCoords.length > 0) {
+    const pulseR = 32 + Math.sin(snap.scatterPulse || 0) * 8;
+    snap.scatterCoords.forEach(pt => {
+      targetCtx.save();
+      const beamGrad = targetCtx.createLinearGradient(pt.x, pt.y, cx, cy);
+      beamGrad.addColorStop(0, 'rgba(253, 224, 71, 0.95)');
+      beamGrad.addColorStop(1, 'rgba(24, 255, 130, 0.95)');
+      targetCtx.strokeStyle = beamGrad;
+      targetCtx.lineWidth = 5;
+      targetCtx.shadowColor = '#fde047';
+      targetCtx.shadowBlur = 18;
+      targetCtx.beginPath();
+      targetCtx.moveTo(pt.x, pt.y);
+      targetCtx.lineTo(cx, cy);
+      targetCtx.stroke();
+
+      targetCtx.beginPath();
+      targetCtx.arc(pt.x, pt.y, pulseR, 0, Math.PI * 2);
+      targetCtx.lineWidth = 3.5;
+      targetCtx.strokeStyle = '#ffffff';
+      targetCtx.stroke();
+      targetCtx.restore();
+    });
+  }
+
+  // 6. Center Tourbillon Core
+  targetCtx.save();
+  targetCtx.translate(cx, cy);
+  targetCtx.beginPath();
+  targetCtx.arc(0, 0, 50, 0, Math.PI * 2);
+  targetCtx.fillStyle = '#090712';
+  targetCtx.fill();
+  targetCtx.lineWidth = 4;
+  targetCtx.strokeStyle = snap.freeSpins > 0 ? '#18ff82' : '#fde047';
+  targetCtx.stroke();
+
+  targetCtx.rotate(snap.coreAngle);
+  targetCtx.strokeStyle = snap.freeSpins > 0 ? '#18ff82' : '#eab308';
+  targetCtx.lineWidth = 2.2;
+  for (let i = 0; i < 4; i++) {
+    targetCtx.rotate(Math.PI / 4);
+    targetCtx.strokeRect(-24, -24, 48, 48);
+  }
+  targetCtx.beginPath();
+  targetCtx.arc(0, 0, 12, 0, Math.PI * 2);
+  targetCtx.fillStyle = '#18ff82';
+  targetCtx.shadowColor = '#18ff82';
+  targetCtx.shadowBlur = 15;
+  targetCtx.fill();
+  targetCtx.restore();
+
+  targetCtx.restore();
+}
+
+function renderLoop() {
+  state.coreAngle += state.isSpinning ? 0.06 : 0.01;
+  state.scatterPulse += 0.14;
+
+  drawClockworkDialScene(ctx, canvas.width, canvas.height, state);
 
   particles.forEach(p => {
     p.x += p.vx;
@@ -850,198 +1044,6 @@ function renderLoop() {
     ctx.fill();
   });
 
-  // 2. Roman Numeral Outer Bezel
-  ctx.save();
-  const bezelGrad = ctx.createRadialGradient(cx - 40, cy - 40, 220, cx, cy, 308);
-  bezelGrad.addColorStop(0, '#3b2410');
-  bezelGrad.addColorStop(0.55, '#d99b32');
-  bezelGrad.addColorStop(0.84, '#fff2b2');
-  bezelGrad.addColorStop(1, '#452806');
-  ctx.beginPath();
-  ctx.arc(cx, cy, 306, 0, Math.PI * 2);
-  ctx.fillStyle = bezelGrad;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, 274, 0, Math.PI * 2);
-  ctx.fillStyle = '#090712';
-  ctx.fill();
-  ctx.lineWidth = 2.5;
-  ctx.strokeStyle = state.freeSpins > 0 ? '#18ff82' : '#ffe89e';
-  ctx.stroke();
-
-  ctx.fillStyle = '#1c1004';
-  ctx.font = '900 15px Georgia, serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  for (let k = 0; k < 12; k++) {
-    const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
-    const rx = cx + Math.cos(angle) * 290;
-    const ry = cy + Math.sin(angle) * 290;
-    ctx.fillText(ROMAN_NUMERALS[k], rx, ry);
-  }
-  ctx.restore();
-
-  // 3. Obsidian Velvet Gears
-  const rings = [
-    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#181426', cBot: '#090712', stroke: '#eab308' },
-    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#141021', cBot: '#07050d', stroke: '#ca8a04' },
-    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#100d1a', cBot: '#05040a', stroke: '#a16207' }
-  ];
-
-  rings.forEach(ring => {
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(ring.rot);
-
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 6;
-    drawGearTeeth(ctx, ring.radius + ring.slotR + 2, ring.teeth, 6, ring.stroke);
-
-    const trackGrad = ctx.createLinearGradient(0, -ring.radius, 0, ring.radius);
-    trackGrad.addColorStop(0, ring.cTop);
-    trackGrad.addColorStop(1, ring.cBot);
-    ctx.beginPath();
-    ctx.arc(0, 0, ring.radius + ring.slotR + 2, 0, Math.PI * 2);
-    ctx.fillStyle = trackGrad;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.lineWidth = 2.2;
-    ctx.strokeStyle = ring.stroke;
-    ctx.stroke();
-
-    for (let k = 0; k < 12; k++) {
-      const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
-      const sx = Math.cos(angle) * ring.radius;
-      const sy = Math.sin(angle) * ring.radius;
-      const symKey = ring.data[k];
-      const isPointerSlot = POINTER_OFFSETS.includes(k);
-
-      ctx.beginPath();
-      ctx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
-      ctx.fillStyle = '#040308';
-      ctx.fill();
-      ctx.lineWidth = isPointerSlot ? 2.4 : 1.5;
-      ctx.strokeStyle = isPointerSlot ? 'rgba(255, 255, 255, 0.85)' : '#64748b';
-      ctx.stroke();
-
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(-ring.rot);
-      drawSymbolIcon(ctx, symKey, ring.slotR * 0.9);
-      ctx.restore();
-    }
-    ctx.restore();
-  });
-
-  // 4. Transparent Crystal 4-Pointer Frames
-  POINTER_OFFSETS.forEach(p => {
-    const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
-    const isHit = state.winningPointers.includes(p);
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
-
-    ctx.shadowColor = isHit ? '#18ff82' : 'rgba(255, 255, 255, 0.65)';
-    ctx.shadowBlur = isHit ? 22 : 10;
-
-    if (isHit) {
-      ctx.fillStyle = 'rgba(24, 255, 130, 0.22)';
-      ctx.beginPath();
-      ctx.roundRect(54, -29, 212, 58, 12);
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    ctx.roundRect(54, -29, 212, 58, 12);
-    ctx.lineWidth = isHit ? 3.5 : 2.2;
-    ctx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 255, 255, 0.85)';
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = isHit ? '#18ff82' : '#ffffff';
-    [[61, -22], [259, -22], [61, 22], [259, 22]].forEach(([rx, ry]) => {
-      ctx.beginPath();
-      ctx.arc(rx, ry, 2.3, 0, Math.PI * 2);
-      ctx.fill();
-    });
-
-    ctx.beginPath();
-    ctx.moveTo(256, 0);
-    ctx.lineTo(302, -16);
-    ctx.lineTo(292, 0);
-    ctx.lineTo(302, 16);
-    ctx.closePath();
-    ctx.fillStyle = isHit ? '#18ff82' : '#fde047';
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#3b2406';
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(284, 0, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff1e56';
-    ctx.fill();
-
-    ctx.restore();
-  });
-
-  // 5. Scatter Key Laser Beams
-  if (state.scatterCoords.length > 0) {
-    const pulseR = 32 + Math.sin(state.scatterPulse) * 8;
-    state.scatterCoords.forEach(pt => {
-      ctx.save();
-      const beamGrad = ctx.createLinearGradient(pt.x, pt.y, cx, cy);
-      beamGrad.addColorStop(0, 'rgba(253, 224, 71, 0.95)');
-      beamGrad.addColorStop(1, 'rgba(24, 255, 130, 0.95)');
-      ctx.strokeStyle = beamGrad;
-      ctx.lineWidth = 5;
-      ctx.shadowColor = '#fde047';
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.moveTo(pt.x, pt.y);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, pulseR, 0, Math.PI * 2);
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-      ctx.restore();
-    });
-  }
-
-  // 6. Center Tourbillon Core
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.beginPath();
-  ctx.arc(0, 0, 50, 0, Math.PI * 2);
-  ctx.fillStyle = '#090712';
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = state.freeSpins > 0 ? '#18ff82' : '#fde047';
-  ctx.stroke();
-
-  ctx.rotate(state.coreAngle);
-  ctx.strokeStyle = state.freeSpins > 0 ? '#18ff82' : '#eab308';
-  ctx.lineWidth = 2.2;
-  for (let i = 0; i < 4; i++) {
-    ctx.rotate(Math.PI / 4);
-    ctx.strokeRect(-24, -24, 48, 48);
-  }
-  ctx.beginPath();
-  ctx.arc(0, 0, 12, 0, Math.PI * 2);
-  ctx.fillStyle = '#18ff82';
-  ctx.shadowColor = '#18ff82';
-  ctx.shadowBlur = 15;
-  ctx.fill();
-  ctx.restore();
-
-  // 7. Gold Coins Fountain
   celebrationCoins.forEach(coin => {
     coin.x += coin.vx;
     coin.y += coin.vy;
@@ -1180,7 +1182,7 @@ window.addEventListener('keyup', (e) => {
 });
 
 // ============================================================================
-// STAKE ENGINE RGS & FULL-SESSION REPLAY ARCHIVE (AETHER DIAL - PHASE 4)
+// PRAGMATIC-STYLE COMPACT SQUARE LIVE REPLAY ARCHIVE
 // ============================================================================
 const sessionRoundsHistory = [];
 let activeRecording = null;
@@ -1226,6 +1228,11 @@ handleSpin = async function (isBonusBuy = false) {
   const wagerDeducted = isContinuationFreeSpin ? 0 : (isBonusBuy ? getBet() * BONUS_BUY_MULT : getBet());
   const spinNetWin = Math.max(0, Number((state.balance - (balBefore - wagerDeducted)).toFixed(2)));
 
+  const sOut = getVisibleRing(RING_OUTER, state.posOut);
+  const sMid = getVisibleRing(RING_MIDDLE, state.posMid);
+  const sIn = getVisibleRing(RING_INNER, state.posIn);
+  const evalSnap = evaluatePointers(sOut, sMid, sIn);
+
   if (activeRecording) {
     activeRecording.steps.push({
       posOut: state.posOut,
@@ -1233,7 +1240,10 @@ handleSpin = async function (isBonusBuy = false) {
       posIn: state.posIn,
       multIdx: state.multIdx,
       freeSpinsLeft: state.freeSpins,
-      winAmount: spinNetWin
+      winAmount: spinNetWin,
+      winningPointers: evalSnap.matchedPointers,
+      scatterCoords: evalSnap.keyCount >= 3 ? evalSnap.keyPositions : [],
+      triggeredFreeSpins: evalSnap.keyCount >= 3
     });
     activeRecording.totalWin = Number((activeRecording.totalWin + spinNetWin).toFixed(2));
 
@@ -1248,82 +1258,17 @@ handleSpin = async function (isBonusBuy = false) {
   }
 };
 
-function drawMiniReplayDial(stepData, rotOffset = 0) {
-  const w = replayCanvas.width;
-  const h = replayCanvas.height;
-  const scale = w / 640;
-
-  repCtx.clearRect(0, 0, w, h);
-  repCtx.save();
-  repCtx.scale(scale, scale);
-
-  repCtx.beginPath();
-  repCtx.arc(320, 320, 300, 0, Math.PI * 2);
-  repCtx.fillStyle = '#d99b32';
-  repCtx.fill();
-  repCtx.beginPath();
-  repCtx.arc(320, 320, 272, 0, Math.PI * 2);
-  repCtx.fillStyle = '#090712';
-  repCtx.fill();
-
-  const rings = [
-    { data: getVisibleRing(RING_OUTER, stepData.posOut), radius: 230, slotR: 25, rot: rotOffset },
-    { data: getVisibleRing(RING_MIDDLE, stepData.posMid), radius: 162, slotR: 23, rot: -rotOffset },
-    { data: getVisibleRing(RING_INNER, stepData.posIn), radius: 98, slotR: 21, rot: rotOffset }
-  ];
-
-  rings.forEach(ring => {
-    repCtx.save();
-    repCtx.translate(320, 320);
-    repCtx.rotate(ring.rot);
-    for (let k = 0; k < 12; k++) {
-      const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
-      const sx = Math.cos(angle) * ring.radius;
-      const sy = Math.sin(angle) * ring.radius;
-      repCtx.beginPath();
-      repCtx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
-      repCtx.fillStyle = '#040308';
-      repCtx.fill();
-      repCtx.lineWidth = POINTER_OFFSETS.includes(k) ? 2.4 : 1.3;
-      repCtx.strokeStyle = POINTER_OFFSETS.includes(k) ? '#ffffff' : '#64748b';
-      repCtx.stroke();
-
-      repCtx.save();
-      repCtx.translate(sx, sy);
-      repCtx.rotate(-ring.rot);
-      drawSymbolIcon(repCtx, ring.data[k], ring.slotR * 0.9);
-      repCtx.restore();
-    }
-    repCtx.restore();
-  });
-
-  POINTER_OFFSETS.forEach(p => {
-    const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
-    repCtx.save();
-    repCtx.translate(320, 320);
-    repCtx.rotate(angle);
-    repCtx.beginPath();
-    repCtx.roundRect(54, -29, 212, 58, 12);
-    repCtx.lineWidth = 2.5;
-    repCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    repCtx.stroke();
-    repCtx.restore();
-  });
-
-  repCtx.restore();
-}
-
 function populateReplayDropdown() {
   replayRoundSelect.innerHTML = '';
   sessionRoundsHistory.forEach((rec, idx) => {
     const opt = document.createElement('option');
     opt.value = idx;
-    opt.textContent = `Round #${rec.roundNumber} [${rec.timestamp}] — ${rec.mode} (${rec.steps.length} Spin) | Win: ${rec.totalWin.toFixed(2)}`;
+    opt.textContent = `#${rec.roundNumber} [${rec.timestamp}] ${rec.mode} (${rec.steps.length} Spin) — Win: ${rec.totalWin.toFixed(2)}`;
     replayRoundSelect.appendChild(opt);
   });
 }
 
-async function playOverlayReplay(record) {
+async function playPragmaticReplay(record) {
   if (!record || !record.steps.length) return;
   replayAbortFlag = true;
   await new Promise(r => setTimeout(r, 40));
@@ -1331,47 +1276,82 @@ async function playOverlayReplay(record) {
   selectedReplayRound = record;
 
   replayModal.classList.remove('hidden');
-  document.getElementById('rep-round-id').textContent = `#${record.roundNumber}`;
+  const celebBox = document.getElementById('pr-celebration');
+  celebBox.classList.add('hidden');
+
   document.getElementById('rep-mode').textContent = record.mode;
   document.getElementById('rep-bet').textContent = record.bet.toFixed(2);
-  document.getElementById('rep-total-win').textContent = record.totalWin.toFixed(2);
+  document.getElementById('rep-total-win').textContent = '0.00';
 
-  const logList = document.getElementById('replay-log-list');
-  logList.innerHTML = '';
-  record.steps.forEach((st, i) => {
-    const div = document.createElement('div');
-    div.className = 'rep-log-item';
-    div.id = `rep-step-row-${i}`;
-    const multVal = MULTIPLIERS[Math.min(st.multIdx, MULTIPLIERS.length - 1)];
-    div.textContent = `Spin #${i + 1} — Mult: ${multVal}x | Win: ${st.winAmount.toFixed(2)}`;
-    logList.appendChild(div);
-  });
+  let runningTotal = 0;
 
   for (let i = 0; i < record.steps.length; i++) {
     if (replayAbortFlag) return;
     const step = record.steps[i];
-    document.getElementById('replay-step-badge').textContent = `SPIN ${i + 1} / ${record.steps.length}`;
+    const multVal = MULTIPLIERS[Math.min(step.multIdx, MULTIPLIERS.length - 1)];
 
-    document.querySelectorAll('.rep-log-item').forEach(el => el.classList.remove('active-step'));
-    const activeRow = document.getElementById(`rep-step-row-${i}`);
-    if (activeRow) {
-      activeRow.classList.add('active-step');
-      activeRow.scrollIntoView({ block: 'nearest' });
-    }
+    document.getElementById('pr-hud-fs').textContent = `FREE SPINS: ${step.freeSpinsLeft}`;
+    document.getElementById('pr-hud-mult').textContent = `MULT: ${multVal}x`;
+    document.getElementById('pr-step-txt').textContent = `${i + 1} / ${record.steps.length}`;
+    document.getElementById('pr-hud-status').textContent = `SPIN ${i + 1} OF ${record.steps.length}`;
 
     SoundFX.play('spin', 1.1, 0.65);
-    const spinFrames = 16;
+    const spinFrames = 18;
     for (let f = 1; f <= spinFrames; f++) {
       if (replayAbortFlag) return;
-      const rot = (1 - f / spinFrames) * Math.PI * 1.5;
-      drawMiniReplayDial(step, rot);
-      await new Promise(r => setTimeout(r, 25));
+      const t = f / spinFrames;
+      const ease = 1 - Math.pow(1 - t, 3);
+      const rot = (1 - ease) * Math.PI * 2;
+      drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
+        posOut: step.posOut,
+        posMid: step.posMid,
+        posIn: step.posIn,
+        rotOut: rot,
+        rotMid: -rot,
+        rotIn: rot,
+        coreAngle: f * 0.15,
+        freeSpins: step.freeSpinsLeft,
+        winningPointers: [],
+        scatterCoords: []
+      });
+      await new Promise(r => setTimeout(r, 26));
     }
 
-    drawMiniReplayDial(step, 0);
-    SoundFX.play(step.winAmount > 0 ? 'win' : 'stop', 1.0, 0.8);
-    await new Promise(r => setTimeout(r, 850));
+    // Settled frame with exact winning frames & scatter beams
+    drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
+      posOut: step.posOut,
+      posMid: step.posMid,
+      posIn: step.posIn,
+      rotOut: 0,
+      rotMid: 0,
+      rotIn: 0,
+      coreAngle: 0.5,
+      freeSpins: step.freeSpinsLeft,
+      winningPointers: step.winningPointers,
+      scatterCoords: step.scatterCoords
+    });
+
+    if (step.triggeredFreeSpins) {
+      SoundFX.play(i === 0 ? 'scatter' : 'retrigger', 1.0, 0.9);
+      document.getElementById('pr-celeb-title').textContent = i === 0 ? 'SCATTER!' : 'RETRIGGER!';
+      document.getElementById('pr-celeb-val').textContent = i === 0 ? '+8 FREE SPINS' : '+5 FREE SPINS';
+      celebBox.classList.remove('hidden');
+      await new Promise(r => setTimeout(r, 1100));
+      celebBox.classList.add('hidden');
+    } else if (step.winAmount > 0) {
+      SoundFX.play('win', 1 + step.multIdx * 0.05, 0.85);
+      runningTotal = Number((runningTotal + step.winAmount).toFixed(2));
+      document.getElementById('rep-total-win').textContent = runningTotal.toFixed(2);
+      document.getElementById('pr-hud-status').textContent = `WIN: +${step.winAmount.toFixed(2)} (${multVal}x)`;
+      await new Promise(r => setTimeout(r, 950));
+    } else {
+      SoundFX.play('stop', 1.0, 0.7);
+      await new Promise(r => setTimeout(r, 700));
+    }
   }
+
+  document.getElementById('rep-total-win').textContent = record.totalWin.toFixed(2);
+  document.getElementById('pr-hud-status').textContent = `ROUND COMPLETE — TOTAL WIN: ${record.totalWin.toFixed(2)}`;
 }
 
 function closeReplayModal() {
@@ -1382,22 +1362,21 @@ function closeReplayModal() {
 btnReplay.addEventListener('click', () => {
   if (!state.isSpinning && sessionRoundsHistory.length > 0 && state.freeSpins === 0) {
     populateReplayDropdown();
-    playOverlayReplay(sessionRoundsHistory[0]);
+    playPragmaticReplay(sessionRoundsHistory[0]);
   }
 });
 
 replayRoundSelect.addEventListener('change', (e) => {
   const idx = parseInt(e.target.value, 10);
   if (sessionRoundsHistory[idx]) {
-    playOverlayReplay(sessionRoundsHistory[idx]);
+    playPragmaticReplay(sessionRoundsHistory[idx]);
   }
 });
 
 document.getElementById('btn-replay-restart').addEventListener('click', () => {
-  if (selectedReplayRound) playOverlayReplay(selectedReplayRound);
+  if (selectedReplayRound) playPragmaticReplay(selectedReplayRound);
 });
 document.getElementById('btn-replay-close').addEventListener('click', closeReplayModal);
-document.getElementById('btn-replay-close-bottom').addEventListener('click', closeReplayModal);
 
 (async function bootStakeSession() {
   if (!window.StakeRGS) return;
@@ -1413,7 +1392,7 @@ document.getElementById('btn-replay-close-bottom').addEventListener('click', clo
       sessionRoundsHistory.unshift(parsed);
       btnReplay.disabled = false;
       populateReplayDropdown();
-      setTimeout(() => playOverlayReplay(parsed), 500);
+      setTimeout(() => playPragmaticReplay(parsed), 500);
     }
   }
   updateUI(0);
