@@ -1,6 +1,5 @@
-// CHRONO-FORGE — Pragmatic-Inspired Grand Clockwork Edition
-// Features: Roman Numeral Dial, Floating Gold Sparks, Gem-Inlaid Pointers, Big Win Celebration,
-// Autoplay (10/20/50/70/100/500 + Hold Spacebar), Visual Icon Paytable & Detailed Rules Guide
+// CHRONO-FORGE — 3D Shaded Gemstones & Gears, Extruded 3D Big/Max Win Coins,
+// Weighted Heavy Spin Physics, Active Laser Alignment Guides & Hybrid MP3/Synth Audio
 
 const PAYTABLE = {
   NUT: 0.35,
@@ -13,14 +12,14 @@ const PAYTABLE = {
 };
 
 const SYMBOL_INFO = [
-  { key: 'WILD',     name: 'Alchemy Core (WILD)', pay: '28.0x', desc: 'Substitutes for any gem or gear. 3 aligned cores pay 28.0x!' },
-  { key: 'RUBY',     name: 'Crimson Ruby',        pay: '16.0x', desc: 'Highest paying royal gemstone on 3-ring alignment.' },
-  { key: 'EMERALD',  name: 'Forest Emerald',      pay: '6.5x',  desc: 'High-value alchemical emerald.' },
+  { key: 'WILD',     name: 'Alchemy Core (WILD)', pay: '28.0x', desc: 'Substitutes for any symbol except Time Key. 3 aligned cores pay 28.0x!' },
+  { key: 'RUBY',     name: 'Crimson Ruby',        pay: '16.0x', desc: 'Highest paying royal 3D gemstone on a 3-ring alignment.' },
+  { key: 'EMERALD',  name: 'Forest Emerald',      pay: '6.5x',  desc: 'High-value faceted alchemical emerald.' },
   { key: 'SAPPHIRE', name: 'Royal Sapphire',      pay: '3.2x',  desc: 'Medium-high celestial sapphire.' },
-  { key: 'GEAR',     name: 'Brass Cogwheel',      pay: '1.6x',  desc: 'Precision clockwork gear.' },
-  { key: 'SPRING',   name: 'Steel Mainspring',    pay: '0.75x', desc: 'Tempered watchmaker spring.' },
-  { key: 'NUT',      name: 'Copper Hex Nut',      pay: '0.35x', desc: 'Base mechanical fastener.' },
-  { key: 'KEY',      name: 'Golden Time Key (SCATTER)', pay: 'BONUS', desc: 'Land 3 or more Keys anywhere on the 4 pointers to unlock 8 Free Spins!' }
+  { key: 'GEAR',     name: 'Brass Cogwheel',      pay: '1.6x',  desc: '3D bevelled clockwork gear.' },
+  { key: 'SPRING',   name: 'Steel Mainspring',    pay: '0.75x', desc: 'Tempered steel watchmaker coil.' },
+  { key: 'NUT',      name: 'Copper Hex Nut',      pay: '0.35x', desc: 'Heavy copper mechanical fastener.' },
+  { key: 'KEY',      name: 'Golden Time Key (SCATTER)', pay: 'BONUS', desc: 'Land 3 or more Keys anywhere on the 4 golden pointers (XII, III, VI, IX) to trigger 8 Free Spins!' }
 ];
 
 // 36-stop virtual rings (96.34% RTP)
@@ -80,76 +79,80 @@ const state = {
   spaceHoldAuto: false
 };
 
-// Floating Gold Dust Particles for Pragmatic-style atmosphere
-const particles = Array.from({ length: 38 }, () => ({
-  x: Math.random() * 620,
-  y: Math.random() * 620,
-  r: 1 + Math.random() * 2.2,
+// Ambient Gold Sparks + Celebration Coins
+const particles = Array.from({ length: 42 }, () => ({
+  x: Math.random() * 640,
+  y: Math.random() * 640,
+  r: 1.2 + Math.random() * 2.4,
   vx: (Math.random() - 0.5) * 0.35,
-  vy: -0.2 - Math.random() * 0.45,
-  alpha: 0.25 + Math.random() * 0.65
+  vy: -0.25 - Math.random() * 0.5,
+  alpha: 0.3 + Math.random() * 0.65
 }));
 
-// Procedural Web Audio Synthesizer
+let celebrationCoins = [];
+
+// Hybrid Audio Engine: Plays real studio MP3 files from frontend/sounds/ if uploaded,
+// with warm low-frequency mechanical fallback so it never sounds harsh.
 const SoundFX = {
   ctx: null,
+  mp3Ready: {},
+  tracks: {},
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) this.ctx = new AudioCtx();
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+
+    if (Object.keys(this.tracks).length === 0) {
+      ['spin', 'stop', 'win', 'scatter', 'bigwin'].forEach(name => {
+        const audio = new Audio(`sounds/${name}.mp3`);
+        audio.preload = 'auto';
+        audio.addEventListener('canplaythrough', () => { this.mp3Ready[name] = true; }, { once: true });
+        this.tracks[name] = audio;
+      });
+    }
   },
-  tick(freq = 540, duration = 0.028, vol = 0.07) {
+  play(name, pitchRate = 1.0) {
     if (!state.soundOn) return;
     this.init();
+
+    if (this.mp3Ready[name] && this.tracks[name]) {
+      try {
+        const clone = this.tracks[name].cloneNode();
+        clone.volume = 0.8;
+        clone.playbackRate = pitchRate;
+        clone.play().catch(() => {});
+        return;
+      } catch (e) {}
+    }
+
+    // Soft warm fallback if MP3s are not yet uploaded
     if (!this.ctx) return;
+    const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + duration);
-    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + duration);
-  },
-  chime(step = 0) {
-    if (!state.soundOn) return;
-    this.init();
-    if (!this.ctx) return;
-    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
-    const f = notes[Math.min(step, notes.length - 1)];
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(f, this.ctx.currentTime);
-    gain.gain.setValueAtTime(0.16, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.4);
-  },
-  bonusFanfare() {
-    if (!state.soundOn) return;
-    [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, idx) => {
-      setTimeout(() => {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(f, this.ctx.currentTime);
-        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.5);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.5);
-      }, idx * 100);
-    });
+    if (name === 'spin' || name === 'stop') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(name === 'stop' ? 110 : 180, now);
+      osc.frequency.exponentialRampToValueAtTime(55, now + 0.06);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(now + 0.06);
+    } else {
+      osc.type = 'sine';
+      const freq = name === 'scatter' ? 587.33 : 440 * pitchRate;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.11, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(now + 0.35);
+    }
   }
 };
 
@@ -198,14 +201,12 @@ function updateUI(roundWin = null) {
     el.classList.toggle('active', idx === Math.min(state.multIdx, MULTIPLIERS.length - 1));
   });
 
-  // Stake.us Social Terminology
   const isSoc = state.socialMode;
   document.getElementById('lbl-balance').textContent = isSoc ? 'COINS' : 'CREDIT';
   document.getElementById('lbl-bet').textContent = isSoc ? 'PLAY' : 'BET';
   document.getElementById('lbl-buy-title').textContent = isSoc ? 'GET FREE SPINS' : 'BUY FREE SPINS';
   document.getElementById('social-toggle').textContent = isSoc ? 'SOCIAL (US)' : 'STANDARD';
 
-  // Autoplay Button State
   if (isAutoActive()) {
     btnAutoplay.classList.add('running');
     autoLbl.textContent = 'STOP AUTO';
@@ -220,14 +221,16 @@ function updateUI(roundWin = null) {
 }
 
 // ============================================================================
-// HIGH-DETAIL GEMSTONE & CLOCKWORK RENDERER
+// REALISTIC 3D FACETED GEMSTONES & BEVELLED METALLIC GEARS
 // ============================================================================
-function drawGemFacet(c, r, cMain, cLight, cDark, sides = 6) {
+function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
   c.save();
-  // Outer glow
-  c.shadowColor = cMain;
-  c.shadowBlur = 10;
+  // 3D Cast Drop Shadow inside socket
+  c.shadowColor = 'rgba(0, 0, 0, 0.85)';
+  c.shadowBlur = 8;
+  c.shadowOffsetY = 4;
 
+  // Base Pavilion Polygon
   c.beginPath();
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
@@ -238,34 +241,55 @@ function drawGemFacet(c, r, cMain, cLight, cDark, sides = 6) {
   }
   c.closePath();
 
-  const grad = c.createLinearGradient(-r, -r, r, r);
-  grad.addColorStop(0, '#ffffff');
-  grad.addColorStop(0.25, cLight);
-  grad.addColorStop(0.65, cMain);
-  grad.addColorStop(1, cDark);
-  c.fillStyle = grad;
+  const baseGrad = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r * 1.1);
+  baseGrad.addColorStop(0, cTop);
+  baseGrad.addColorStop(0.55, cMid);
+  baseGrad.addColorStop(1, cDeep);
+  c.fillStyle = baseGrad;
   c.fill();
 
   c.shadowBlur = 0;
+  c.shadowOffsetY = 0;
   c.lineWidth = 1.6;
-  c.strokeStyle = cLight;
+  c.strokeStyle = cRim;
   c.stroke();
 
-  // Inner Crown Table
+  // Facet Cut Lines from outer vertices to inner crown table
+  const innerR = r * 0.54;
+  c.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  c.lineWidth = 0.9;
+  for (let i = 0; i < sides; i++) {
+    const a = (i * Math.PI * 2) / sides - Math.PI / 2;
+    c.beginPath();
+    c.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    c.lineTo(Math.cos(a) * innerR, Math.sin(a) * innerR);
+    c.stroke();
+  }
+
+  // Elevated 3D Crown Table
   c.beginPath();
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
-    const x = Math.cos(a) * (r * 0.5);
-    const y = Math.sin(a) * (r * 0.5);
+    const x = Math.cos(a) * innerR;
+    const y = Math.sin(a) * innerR;
     if (i === 0) c.moveTo(x, y);
     else c.lineTo(x, y);
   }
   c.closePath();
-  c.fillStyle = 'rgba(255,255,255,0.32)';
+  const tableGrad = c.createLinearGradient(-innerR, -innerR, innerR, innerR);
+  tableGrad.addColorStop(0, 'rgba(255,255,255,0.65)');
+  tableGrad.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+  tableGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
+  c.fillStyle = tableGrad;
   c.fill();
-  c.strokeStyle = 'rgba(255,255,255,0.5)';
-  c.lineWidth = 0.8;
+  c.strokeStyle = 'rgba(255,255,255,0.6)';
   c.stroke();
+
+  // Specular Star Glint on top-left edge
+  c.fillStyle = '#ffffff';
+  c.beginPath();
+  c.arc(-r * 0.28, -r * 0.3, r * 0.12, 0, Math.PI * 2);
+  c.fill();
   c.restore();
 }
 
@@ -273,74 +297,83 @@ function drawSymbolIcon(c, type, r) {
   c.save();
   switch (type) {
     case 'RUBY':
-      drawGemFacet(c, r * 0.9, '#e11d48', '#fda4af', '#881337', 8);
+      draw3DGem(c, r * 0.92, '#ff8fa3', '#e11d48', '#590d22', '#ffb3c1', 8);
       break;
     case 'EMERALD':
-      drawGemFacet(c, r * 0.88, '#059669', '#6ee7b7', '#064e3b', 6);
+      draw3DGem(c, r * 0.9, '#a7f3d0', '#059669', '#022c22', '#6ee7b7', 6);
       break;
     case 'SAPPHIRE':
-      drawGemFacet(c, r * 0.9, '#2563eb', '#93c5fd', '#1e3a8a', 4);
+      draw3DGem(c, r * 0.92, '#bae6fd', '#2563eb', '#172554', '#7dd3fc', 4);
       break;
     case 'WILD': {
+      // 3D Plasma Alchemy Sphere inside Gyroscope Rings
       c.shadowColor = '#00f5d4';
-      c.shadowBlur = 14;
-      const glow = c.createRadialGradient(0, 0, 1, 0, 0, r * 0.95);
-      glow.addColorStop(0, '#ffffff');
-      glow.addColorStop(0.4, '#2dd4bf');
-      glow.addColorStop(0.85, '#0d9488');
-      glow.addColorStop(1, '#115e59');
+      c.shadowBlur = 16;
+      const sphere = c.createRadialGradient(-r * 0.25, -r * 0.25, 1, 0, 0, r * 0.92);
+      sphere.addColorStop(0, '#ffffff');
+      sphere.addColorStop(0.35, '#5eead4');
+      sphere.addColorStop(0.75, '#0d9488');
+      sphere.addColorStop(1, '#042f2e');
       c.beginPath();
       c.arc(0, 0, r * 0.88, 0, Math.PI * 2);
-      c.fillStyle = glow;
+      c.fillStyle = sphere;
       c.fill();
       c.shadowBlur = 0;
-      c.lineWidth = 2;
-      c.strokeStyle = '#ccfbf1';
-      c.stroke();
 
-      c.strokeStyle = '#042f2e';
-      c.lineWidth = 1.6;
+      // 3D Gold Gyro Bands
+      c.lineWidth = 2;
+      c.strokeStyle = '#fde047';
       c.beginPath();
-      c.ellipse(0, 0, r * 0.68, r * 0.24, Math.PI / 4, 0, Math.PI * 2);
+      c.ellipse(0, 0, r * 0.82, r * 0.3, Math.PI / 4, 0, Math.PI * 2);
       c.stroke();
       c.beginPath();
-      c.ellipse(0, 0, r * 0.68, r * 0.24, -Math.PI / 4, 0, Math.PI * 2);
+      c.ellipse(0, 0, r * 0.82, r * 0.3, -Math.PI / 4, 0, Math.PI * 2);
       c.stroke();
       break;
     }
     case 'KEY': {
-      c.shadowColor = '#fde047';
-      c.shadowBlur = 12;
+      // 3D Embossed Golden Scatter Key
+      c.shadowColor = 'rgba(0,0,0,0.85)';
+      c.shadowBlur = 6;
+      c.shadowOffsetY = 3;
       const kGrad = c.createLinearGradient(-r, -r, r, r);
       kGrad.addColorStop(0, '#fef9c3');
-      kGrad.addColorStop(0.5, '#facc15');
-      kGrad.addColorStop(1, '#a16207');
+      kGrad.addColorStop(0.45, '#facc15');
+      kGrad.addColorStop(1, '#854d0e');
       c.fillStyle = kGrad;
       c.strokeStyle = '#422006';
-      c.lineWidth = 1.5;
+      c.lineWidth = 1.6;
 
       c.beginPath();
-      c.arc(0, -r * 0.35, r * 0.36, 0, Math.PI * 2);
+      c.arc(0, -r * 0.36, r * 0.38, 0, Math.PI * 2);
       c.fill();
       c.stroke();
       c.shadowBlur = 0;
+      c.shadowOffsetY = 0;
 
+      // Inner Ruby Jewel inside Key Bow
       c.beginPath();
-      c.arc(0, -r * 0.35, r * 0.14, 0, Math.PI * 2);
-      c.fillStyle = '#140c05';
+      c.arc(0, -r * 0.36, r * 0.15, 0, Math.PI * 2);
+      c.fillStyle = '#e11d48';
       c.fill();
 
+      // 3D Key Shaft & Teeth
       c.fillStyle = kGrad;
-      c.fillRect(-r * 0.1, -r * 0.04, r * 0.2, r * 0.76);
-      c.fillRect(r * 0.08, r * 0.34, r * 0.26, r * 0.13);
-      c.fillRect(r * 0.08, r * 0.56, r * 0.3, r * 0.13);
+      c.fillRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.78);
+      c.strokeRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.78);
+      c.fillRect(r * 0.09, r * 0.34, r * 0.28, r * 0.14);
+      c.fillRect(r * 0.09, r * 0.56, r * 0.32, r * 0.14);
       break;
     }
     case 'GEAR': {
+      // 3D Bevelled Brass Cogwheel
+      c.shadowColor = 'rgba(0,0,0,0.8)';
+      c.shadowBlur = 6;
+      c.shadowOffsetY = 3;
       const teeth = 8;
       c.beginPath();
       for (let i = 0; i < teeth * 2; i++) {
-        const rad = i % 2 === 0 ? r * 0.88 : r * 0.62;
+        const rad = i % 2 === 0 ? r * 0.9 : r * 0.64;
         const a = (i * Math.PI) / teeth;
         const x = Math.cos(a) * rad;
         const y = Math.sin(a) * rad;
@@ -351,43 +384,63 @@ function drawSymbolIcon(c, type, r) {
       const gGrad = c.createLinearGradient(-r, -r, r, r);
       gGrad.addColorStop(0, '#fef08a');
       gGrad.addColorStop(0.5, '#eab308');
-      gGrad.addColorStop(1, '#854d0e');
+      gGrad.addColorStop(1, '#713f12');
       c.fillStyle = gGrad;
       c.fill();
-      c.lineWidth = 1.4;
+      c.shadowBlur = 0;
+      c.shadowOffsetY = 0;
+      c.lineWidth = 1.5;
       c.strokeStyle = '#422006';
       c.stroke();
+
+      // Inner 3D Recessed Hub
       c.beginPath();
-      c.arc(0, 0, r * 0.26, 0, Math.PI * 2);
-      c.fillStyle = '#120b05';
+      c.arc(0, 0, r * 0.38, 0, Math.PI * 2);
+      c.strokeStyle = '#fef08a';
+      c.lineWidth = 1.5;
+      c.stroke();
+      c.beginPath();
+      c.arc(0, 0, r * 0.22, 0, Math.PI * 2);
+      c.fillStyle = '#0d0804';
       c.fill();
       break;
     }
     case 'SPRING': {
-      c.strokeStyle = '#e2e8f0';
-      c.lineWidth = 2.8;
-      c.lineCap = 'round';
+      // 3D Metallic Shaded Coil Spring
+      c.shadowColor = 'rgba(0,0,0,0.8)';
+      c.shadowBlur = 5;
+      c.shadowOffsetY = 2;
       for (let i = -2; i <= 2; i++) {
+        const yOff = i * (r * 0.24);
+        const sGrad = c.createLinearGradient(-r * 0.55, yOff, r * 0.55, yOff);
+        sGrad.addColorStop(0, '#475569');
+        sGrad.addColorStop(0.45, '#f8fafc');
+        sGrad.addColorStop(1, '#334155');
+        c.strokeStyle = sGrad;
+        c.lineWidth = 3.6;
         c.beginPath();
-        c.ellipse(0, i * (r * 0.23), r * 0.52, r * 0.13, -0.18, 0, Math.PI * 2);
+        c.ellipse(0, yOff, r * 0.54, r * 0.14, -0.15, 0, Math.PI * 2);
         c.stroke();
       }
       break;
     }
     case 'NUT':
     default: {
-      drawGemFacet(c, r * 0.82, '#d97706', '#fcd34d', '#78350f', 6);
+      // 3D Bevelled Copper Hex Nut
+      draw3DGem(c, r * 0.84, '#fde68a', '#d97706', '#451a03', '#fbbf24', 6);
       c.beginPath();
-      c.arc(0, 0, r * 0.28, 0, Math.PI * 2);
-      c.fillStyle = '#120b05';
+      c.arc(0, 0, r * 0.3, 0, Math.PI * 2);
+      c.fillStyle = '#0d0804';
       c.fill();
+      c.lineWidth = 1.5;
+      c.strokeStyle = '#fbbf24';
+      c.stroke();
       break;
     }
   }
   c.restore();
 }
 
-// Populate Left Panel Visual Icons & Rules Modal
 function initVisualGuides() {
   const listEl = document.getElementById('visual-paytable-list');
   listEl.innerHTML = '';
@@ -396,11 +449,11 @@ function initVisualGuides() {
     const row = document.createElement('div');
     row.className = 'vpt-row';
     const miniCanvas = document.createElement('canvas');
-    miniCanvas.width = 24;
-    miniCanvas.height = 24;
+    miniCanvas.width = 26;
+    miniCanvas.height = 26;
     const mCtx = miniCanvas.getContext('2d');
-    mCtx.translate(12, 12);
-    drawSymbolIcon(mCtx, sym.key, 11);
+    mCtx.translate(13, 13);
+    drawSymbolIcon(mCtx, sym.key, 11.5);
 
     const nameSpan = document.createElement('span');
     nameSpan.textContent = sym.name.replace(' (WILD)', '');
@@ -413,11 +466,10 @@ function initVisualGuides() {
     listEl.appendChild(row);
   });
 
-  // Render Scatter Key mini icon in left panel
   document.querySelectorAll('canvas.mini-sym').forEach(mc => {
     const mCtx = mc.getContext('2d');
     mCtx.translate(mc.width / 2, mc.height / 2);
-    drawSymbolIcon(mCtx, mc.dataset.sym, 11);
+    drawSymbolIcon(mCtx, mc.dataset.sym, 12);
   });
 }
 
@@ -429,10 +481,10 @@ function renderRulesModal() {
   SYMBOL_INFO.forEach(s => {
     symCardsHtml += `
       <div class="rules-sym-item">
-        <canvas class="modal-sym-icon" data-sym="${s.key}" width="34" height="34"></canvas>
+        <canvas class="modal-sym-icon" data-sym="${s.key}" width="38" height="38"></canvas>
         <div>
-          <strong style="color:#ffe28a">${s.name} — ${s.pay}</strong><br/>
-          <span style="font-size:0.75rem">${s.desc}</span>
+          <strong style="color:#ffe699">${s.name} — ${s.pay}</strong><br/>
+          <span style="font-size:0.76rem">${s.desc}</span>
         </div>
       </div>
     `;
@@ -440,23 +492,24 @@ function renderRulesModal() {
   symCardsHtml += '</div>';
 
   document.getElementById('rules-content').innerHTML = `
-    <h3>HOW TO WIN (4 GOLDEN POINTERS)</h3>
-    <p>Align <b>3 matching symbols</b> across the Outer, Middle, and Inner gears on any of the 4 Roman Numeral pointers (<b>XII, III, VI, IX</b>). Every winning alignment dissolves the matched gems, advances the right-side <b>Alchemy Multiplier</b> (1x up to 100x), and shifts the gears clockwise (Outer +1, Middle +2, Inner +3) for consecutive cascade wins!</p>
-    <h3>SYMBOL GUIDE &amp; PAYTABLE (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
+    <h3>1. HOW TO WIN (THE 4 GOLDEN LASER POINTERS)</h3>
+    <p>Look at the <b>4 illuminated golden alignment tracks</b> at <b>XII (12), III (3), VI (6), and IX (9) o'clock</b>. Whenever <b>3 matching symbols</b> line up from Outer to Inner gear along any of those 4 tracks, you win! Matched symbols vanish, the right-side <b>Alchemy Multiplier</b> climbs (1x → 100x), and the gears shift clockwise (Outer +1, Middle +2, Inner +3) for chain wins.</p>
+    <h3>2. HOW TO TRIGGER SCATTER (FREE SPINS)</h3>
+    <p><b>Golden Time Keys</b> are Scatter symbols. They do NOT need to line up on the same pointer—simply landing <b>3 or more Golden Keys anywhere inside the 4 golden pointer tracks (XII, III, VI, IX)</b> triggers <b>8 Grand Complication Free Spins</b> where the Alchemy Multiplier never resets!</p>
+    <h3>3. 3D SYMBOL PAYTABLE (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
     ${symCardsHtml}
-    <h3>SCATTER &amp; GRAND COMPLICATION FREE SPINS</h3>
-    <p>Landing <b>3 or more Golden Time Keys</b> anywhere across the 4 pointers awards <b>8 Free Spins</b> (+3 extra spins on retrigger). During Free Spins, the Alchemy Multiplier <b>never resets</b> between spins. Theoretical RTP: <b>96.34%</b> | Max Win: <b>5,000x</b>.</p>
+    <p style="margin-top:8px">Theoretical RTP: <b>96.34%</b> | Maximum Win Cap: <b>5,000x</b>.</p>
   `;
 
   document.querySelectorAll('canvas.modal-sym-icon').forEach(mc => {
     const mCtx = mc.getContext('2d');
-    mCtx.translate(17, 17);
-    drawSymbolIcon(mCtx, mc.dataset.sym, 15);
+    mCtx.translate(19, 19);
+    drawSymbolIcon(mCtx, mc.dataset.sym, 16);
   });
 }
 
 // ============================================================================
-// CORE GAME LOGIC & BIG WIN CELEBRATION
+// CORE GAME LOGIC & 3D COIN FOUNTAIN CELEBRATION
 // ============================================================================
 function getVisibleRing(ringArray, startPos) {
   const L = ringArray.length;
@@ -501,41 +554,59 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, state.turbo ? ms * 0.35 : ms));
 }
 
+function spawn3DCoins(count = 45) {
+  celebrationCoins = Array.from({ length: count }, () => ({
+    x: 320 + (Math.random() - 0.5) * 140,
+    y: 340,
+    vx: (Math.random() - 0.5) * 11,
+    vy: -7 - Math.random() * 9,
+    r: 10 + Math.random() * 6,
+    spin: Math.random() * Math.PI * 2,
+    spinSpeed: 0.12 + Math.random() * 0.15
+  }));
+}
+
 async function showBigWinCelebration(amount, mult) {
   if (mult < 15) return;
   const tierEl = document.getElementById('big-win-tier');
   const amtEl = document.getElementById('big-win-amount');
-  tierEl.textContent = mult >= 50 ? 'SENSATIONAL WIN!' : (mult >= 25 ? 'MEGA WIN!' : 'BIG WIN!');
+  tierEl.textContent = mult >= 100 ? 'MAX / SENSATIONAL WIN!' : (mult >= 30 ? 'MEGA WIN!' : 'BIG WIN!');
   bigWinBanner.classList.remove('hidden');
+  SoundFX.play('bigwin');
+  spawn3DCoins(55);
 
-  const steps = 25;
+  const steps = 32;
   for (let i = 1; i <= steps; i++) {
     amtEl.textContent = ((amount * i) / steps).toFixed(2);
-    SoundFX.tick(600 + i * 22, 0.02, 0.06);
-    await sleep(35);
+    await sleep(38);
   }
-  await sleep(900);
+  await sleep(1100);
   bigWinBanner.classList.add('hidden');
+  celebrationCoins = [];
 }
 
+// Weighted, heavy watchmaker gear rotation (slower and smoother)
 function animateRotation(durationMs, dirOut, dirMid, dirIn) {
   return new Promise(resolve => {
-    const dur = state.turbo ? durationMs * 0.32 : durationMs;
+    const dur = state.turbo ? durationMs * 0.38 : durationMs;
     const start = performance.now();
     const initOut = state.rotOut;
     const initMid = state.rotMid;
     const initIn = state.rotIn;
     let lastTick = 0;
 
+    SoundFX.play('spin');
+
     function frame(now) {
       const t = Math.min((now - start) / dur, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
+      // Smooth heavy deceleration curve
+      const ease = 1 - Math.pow(1 - t, 3.4);
       state.rotOut = initOut + dirOut * ease;
       state.rotMid = initMid + dirMid * ease;
       state.rotIn = initIn + dirIn * ease;
 
-      if (now - lastTick > 60) {
-        SoundFX.tick(480 + t * 200, 0.022, 0.05);
+      if (now - lastTick > 110) {
+        SoundFX.play('spin');
         lastTick = now;
       }
 
@@ -545,6 +616,7 @@ function animateRotation(durationMs, dirOut, dirMid, dirIn) {
         state.rotOut = 0;
         state.rotMid = 0;
         state.rotIn = 0;
+        SoundFX.play('stop');
         resolve();
       }
     }
@@ -587,7 +659,7 @@ async function handleSpin(isBonusBuy = false) {
   } else {
     state.balance -= cost;
     state.multIdx = 0;
-    statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ TIME KEYS...' : 'WINDING CHRONOGRAPH GEARS...';
+    statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ SCATTER KEYS...' : 'WINDING 3D CHRONOGRAPH GEARS...';
   }
   updateUI(0);
 
@@ -603,7 +675,8 @@ async function handleSpin(isBonusBuy = false) {
     state.posIn = Math.floor(Math.random() * L);
   }
 
-  await animateRotation(520, Math.PI * 2, -Math.PI * 2, Math.PI * 2);
+  // Slower, weighted 1150ms rotation
+  await animateRotation(1150, Math.PI * 2, -Math.PI * 2, Math.PI * 2);
 
   let roundTotalMult = 0;
   let step = 0;
@@ -618,15 +691,15 @@ async function handleSpin(isBonusBuy = false) {
     if (step === 0 && res.keyCount >= 3) {
       const award = isFree ? 3 : 8;
       state.freeSpins += award;
-      SoundFX.bonusFanfare();
-      statusBanner.textContent = `SCATTER TRIGGERED! +${award} GRAND COMPLICATION SPINS!`;
+      SoundFX.play('scatter');
+      statusBanner.textContent = `3+ SCATTER KEYS! +${award} GRAND COMPLICATION SPINS!`;
       updateUI(roundTotalMult * bet);
-      await sleep(850);
+      await sleep(950);
     }
 
     if (res.hasWin) {
       state.winningPointers = res.matchedPointers;
-      SoundFX.chime(state.multIdx);
+      SoundFX.play('win', 1 + state.multIdx * 0.06);
 
       const activeMult = MULTIPLIERS[Math.min(state.multIdx, MULTIPLIERS.length - 1)];
       const stepWinMult = res.winBase * activeMult;
@@ -634,7 +707,7 @@ async function handleSpin(isBonusBuy = false) {
 
       statusBanner.textContent = `ALIGNED! ${res.winBase.toFixed(2)}x × ${activeMult}x ALCHEMY = ${(roundTotalMult * bet).toFixed(2)}`;
       updateUI(roundTotalMult * bet);
-      await sleep(580);
+      await sleep(700);
 
       state.multIdx++;
       state.winningPointers = [];
@@ -642,7 +715,7 @@ async function handleSpin(isBonusBuy = false) {
       state.posMid = (state.posMid - 2 + L) % L;
       state.posIn = (state.posIn - 3 + L) % L;
 
-      await animateRotation(300, Math.PI / 6, (Math.PI / 6) * 2, (Math.PI / 6) * 3);
+      await animateRotation(520, Math.PI / 6, (Math.PI / 6) * 2, (Math.PI / 6) * 3);
       step++;
     } else {
       break;
@@ -668,26 +741,26 @@ async function handleSpin(isBonusBuy = false) {
   state.isSpinning = false;
   updateUI();
 
-  // Continue Free Spins or Autoplay Loop
   if (state.freeSpins > 0) {
-    await sleep(420);
+    await sleep(480);
     handleSpin(false);
   } else if (state.spaceHoldAuto) {
-    await sleep(220);
+    await sleep(280);
     if (state.spaceHoldAuto) handleSpin(false);
   } else if (state.autoRemaining > 0) {
     state.autoRemaining--;
     updateUI();
-    await sleep(320);
-    if (state.autoRemaining > 0 || state.isSpinning === false && btnAutoplay.classList.contains('running')) {
-      if (state.autoRemaining === 0) stopAllAutoplay();
-      else handleSpin(false);
+    await sleep(380);
+    if (state.autoRemaining > 0) {
+      handleSpin(false);
+    } else {
+      stopAllAutoplay();
     }
   }
 }
 
 // ============================================================================
-// CONTINUOUS 60FPS CLOCKWORK & AMBIENT PARTICLE RENDER LOOP
+// 3D RENDER LOOP (DEPTH SHADOWS, LASER POINTER GUIDES & FALLING 3D GOLD COINS)
 // ============================================================================
 function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.beginPath();
@@ -711,23 +784,23 @@ function renderLoop() {
   const cx = w / 2;
   const cy = h / 2;
 
-  state.coreAngle += state.isSpinning ? 0.09 : 0.012;
+  state.coreAngle += state.isSpinning ? 0.06 : 0.01;
   ctx.clearRect(0, 0, w, h);
 
-  // 1. Ambient Sunburst & Floating Gold Particles
+  // 1. Ambient Sunburst & Floating Gold Sparks
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(state.coreAngle * 0.15);
+  ctx.rotate(state.coreAngle * 0.12);
   for (let i = 0; i < 12; i++) {
     ctx.rotate(Math.PI / 6);
-    const rayGrad = ctx.createLinearGradient(0, 0, 305, 0);
-    rayGrad.addColorStop(0, 'rgba(255, 210, 100, 0.12)');
-    rayGrad.addColorStop(1, 'rgba(255, 210, 100, 0)');
+    const rayGrad = ctx.createLinearGradient(0, 0, 315, 0);
+    rayGrad.addColorStop(0, 'rgba(255, 215, 110, 0.14)');
+    rayGrad.addColorStop(1, 'rgba(255, 215, 110, 0)');
     ctx.fillStyle = rayGrad;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(305, -18);
-    ctx.lineTo(305, 18);
+    ctx.lineTo(315, -20);
+    ctx.lineTo(315, 20);
     ctx.closePath();
     ctx.fill();
   }
@@ -736,51 +809,50 @@ function renderLoop() {
   particles.forEach(p => {
     p.x += p.vx;
     p.y += p.vy;
-    if (p.y < 10) { p.y = 610; p.x = Math.random() * 620; }
+    if (p.y < 10) { p.y = 630; p.x = Math.random() * 640; }
     ctx.fillStyle = `rgba(255, 224, 130, ${p.alpha})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  // 2. Ornate Roman Numeral Clock Bezel
+  // 2. 3D Extruded Roman Numeral Outer Bezel
   ctx.save();
-  const bezelGrad = ctx.createRadialGradient(cx, cy, 230, cx, cy, 298);
-  bezelGrad.addColorStop(0, '#2a1a0c');
-  bezelGrad.addColorStop(0.55, '#c8963e');
-  bezelGrad.addColorStop(0.85, '#ffe28a');
-  bezelGrad.addColorStop(1, '#4a2e08');
+  const bezelGrad = ctx.createRadialGradient(cx - 40, cy - 40, 220, cx, cy, 308);
+  bezelGrad.addColorStop(0, '#36210f');
+  bezelGrad.addColorStop(0.55, '#d49b38');
+  bezelGrad.addColorStop(0.82, '#fff0b3');
+  bezelGrad.addColorStop(1, '#3d2405');
   ctx.beginPath();
-  ctx.arc(cx, cy, 296, 0, Math.PI * 2);
+  ctx.arc(cx, cy, 306, 0, Math.PI * 2);
   ctx.fillStyle = bezelGrad;
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(cx, cy, 266, 0, Math.PI * 2);
-  ctx.fillStyle = '#120b06';
+  ctx.arc(cx, cy, 274, 0, Math.PI * 2);
+  ctx.fillStyle = '#0f0905';
   ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#ffe28a';
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#ffe699';
   ctx.stroke();
 
-  // Roman Numerals around the bezel
   ctx.fillStyle = '#1c1004';
-  ctx.font = '900 14px Georgia, serif';
+  ctx.font = '900 15px Georgia, serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   for (let k = 0; k < 12; k++) {
     const angle = -Math.PI / 2 + (k * Math.PI * 2) / 12;
-    const rx = cx + Math.cos(angle) * 281;
-    const ry = cy + Math.sin(angle) * 281;
+    const rx = cx + Math.cos(angle) * 290;
+    const ry = cy + Math.sin(angle) * 290;
     ctx.fillText(ROMAN_NUMERALS[k], rx, ry);
   }
   ctx.restore();
 
-  // 3. Concentric Clockwork Rings
+  // 3. 3D Layered Concentric Gears
   const rings = [
-    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 224, slotR: 24, rot: state.rotOut, teeth: 48, ringFill: '#291a0d', stroke: '#e0ae53' },
-    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 158, slotR: 22, rot: state.rotMid, teeth: 36, ringFill: '#1f1309', stroke: '#bd8b37' },
-    { data: getVisibleRing(RING_INNER, state.posIn), radius: 95, slotR: 20, rot: state.rotIn, teeth: 24, ringFill: '#150d06', stroke: '#946822' }
+    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#382412', cBot: '#170e06', stroke: '#e6b458' },
+    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#2b1b0d', cBot: '#120a04', stroke: '#c48f38' },
+    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#211409', cBot: '#0d0703', stroke: '#9c6d24' }
   ];
 
   rings.forEach(ring => {
@@ -788,12 +860,21 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(ring.rot);
 
+    // 3D Drop Shadow beneath each gear layer
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 6;
     drawGearTeeth(ctx, ring.radius + ring.slotR + 2, ring.teeth, 6, ring.stroke);
 
+    const trackGrad = ctx.createLinearGradient(0, -ring.radius, 0, ring.radius);
+    trackGrad.addColorStop(0, ring.cTop);
+    trackGrad.addColorStop(1, ring.cBot);
     ctx.beginPath();
     ctx.arc(0, 0, ring.radius + ring.slotR + 2, 0, Math.PI * 2);
-    ctx.fillStyle = ring.ringFill;
+    ctx.fillStyle = trackGrad;
     ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
     ctx.lineWidth = 2.2;
     ctx.strokeStyle = ring.stroke;
     ctx.stroke();
@@ -805,51 +886,25 @@ function renderLoop() {
       const symKey = ring.data[k];
       const isPointerSlot = POINTER_OFFSETS.includes(k);
 
-      // Recessed Jewel Socket
+      // Deep 3D Recessed Socket
       ctx.beginPath();
       ctx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
-      ctx.fillStyle = isPointerSlot ? '#1b140a' : '#0b0704';
+      ctx.fillStyle = isPointerSlot ? '#1c1308' : '#080503';
       ctx.fill();
-      ctx.lineWidth = isPointerSlot ? 2.2 : 1.5;
-      ctx.strokeStyle = isPointerSlot ? '#e0ae53' : '#573b14';
+      ctx.lineWidth = isPointerSlot ? 2.4 : 1.4;
+      ctx.strokeStyle = isPointerSlot ? '#ffe699' : '#4a3110';
       ctx.stroke();
 
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(-ring.rot);
-      drawSymbolIcon(ctx, symKey, ring.slotR * 0.86);
+      drawSymbolIcon(ctx, symKey, ring.slotR * 0.88);
       ctx.restore();
     }
     ctx.restore();
   });
 
-  // 4. Center Tourbillon Escapement Core
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.beginPath();
-  ctx.arc(0, 0, 48, 0, Math.PI * 2);
-  ctx.fillStyle = '#140c06';
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#ffe28a';
-  ctx.stroke();
-
-  ctx.rotate(state.coreAngle);
-  ctx.strokeStyle = '#c8963e';
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 4; i++) {
-    ctx.rotate(Math.PI / 4);
-    ctx.strokeRect(-23, -23, 46, 46);
-  }
-  ctx.beginPath();
-  ctx.arc(0, 0, 11, 0, Math.PI * 2);
-  ctx.fillStyle = '#10f57a';
-  ctx.shadowColor = '#10f57a';
-  ctx.shadowBlur = 12;
-  ctx.fill();
-  ctx.restore();
-
-  // 5. Ruby-Inlaid Alignment Pointers (XII, III, VI, IX)
+  // 4. Illuminated 4-Pointer Alignment Tracks (Makes active paylines crystal clear!)
   POINTER_OFFSETS.forEach(p => {
     const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
     const isHit = state.winningPointers.includes(p);
@@ -858,32 +913,86 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(angle);
 
-    if (isHit) {
-      ctx.fillStyle = 'rgba(16, 245, 122, 0.28)';
-      ctx.fillRect(54, -26, 204, 52);
-      ctx.strokeStyle = '#10f57a';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(54, -26, 204, 52);
-    }
+    // Subtle Golden Sightline Guide across all 3 rings
+    ctx.fillStyle = isHit ? 'rgba(24, 255, 130, 0.28)' : 'rgba(255, 230, 153, 0.06)';
+    ctx.fillRect(54, -27, 212, 54);
+    ctx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 230, 153, 0.35)';
+    ctx.lineWidth = isHit ? 3 : 1.2;
+    ctx.strokeRect(54, -27, 212, 54);
 
+    // 3D Gold Pointer Needle
     ctx.beginPath();
-    ctx.moveTo(250, 0);
-    ctx.lineTo(292, -14);
-    ctx.lineTo(284, 0);
-    ctx.lineTo(292, 14);
+    ctx.moveTo(256, 0);
+    ctx.lineTo(300, -15);
+    ctx.lineTo(291, 0);
+    ctx.lineTo(300, 15);
     ctx.closePath();
-    ctx.fillStyle = isHit ? '#10f57a' : '#ffe28a';
+    ctx.fillStyle = isHit ? '#18ff82' : '#ffe699';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#3b2406';
     ctx.stroke();
 
-    // Small Ruby Jewel on Pointer
     ctx.beginPath();
-    ctx.arc(276, 0, 4, 0, Math.PI * 2);
+    ctx.arc(283, 0, 4.5, 0, Math.PI * 2);
     ctx.fillStyle = '#ff2a55';
     ctx.fill();
 
+    ctx.restore();
+  });
+
+  // 5. Center 3D Tourbillon Escapement Core
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.beginPath();
+  ctx.arc(0, 0, 50, 0, Math.PI * 2);
+  ctx.fillStyle = '#120a05';
+  ctx.fill();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#ffe699';
+  ctx.stroke();
+
+  ctx.rotate(state.coreAngle);
+  ctx.strokeStyle = '#d49b38';
+  ctx.lineWidth = 2.2;
+  for (let i = 0; i < 4; i++) {
+    ctx.rotate(Math.PI / 4);
+    ctx.strokeRect(-24, -24, 48, 48);
+  }
+  ctx.beginPath();
+  ctx.arc(0, 0, 12, 0, Math.PI * 2);
+  ctx.fillStyle = '#18ff82';
+  ctx.shadowColor = '#18ff82';
+  ctx.shadowBlur = 14;
+  ctx.fill();
+  ctx.restore();
+
+  // 6. 3D Spinning Gold Coins Fountain during Big Win
+  celebrationCoins.forEach(coin => {
+    coin.x += coin.vx;
+    coin.y += coin.vy;
+    coin.vy += 0.35; // gravity
+    coin.spin += coin.spinSpeed;
+    if (coin.y > 660) {
+      coin.y = 320;
+      coin.x = 320 + (Math.random() - 0.5) * 140;
+      coin.vy = -8 - Math.random() * 8;
+    }
+
+    ctx.save();
+    ctx.translate(coin.x, coin.y);
+    ctx.scale(Math.max(0.2, Math.abs(Math.cos(coin.spin))), 1);
+    const cGrad = ctx.createRadialGradient(-3, -3, 1, 0, 0, coin.r);
+    cGrad.addColorStop(0, '#fffbeb');
+    cGrad.addColorStop(0.5, '#facc15');
+    cGrad.addColorStop(1, '#a16207');
+    ctx.beginPath();
+    ctx.arc(0, 0, coin.r, 0, Math.PI * 2);
+    ctx.fillStyle = cGrad;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#713f12';
+    ctx.stroke();
     ctx.restore();
   });
 
@@ -891,7 +1000,7 @@ function renderLoop() {
 }
 
 // ============================================================================
-// CONTROLS & KEYBOARD (INCLUDING HOLD-SPACEBAR AUTOPLAY)
+// CONTROLS & KEYBOARD
 // ============================================================================
 btnSpin.addEventListener('click', () => {
   if (isAutoActive()) stopAllAutoplay();
@@ -927,7 +1036,6 @@ document.getElementById('social-toggle').addEventListener('click', () => {
   updateUI();
 });
 
-// Autoplay Modal & 10/20/50/70/100/500 Selection
 btnAutoplay.addEventListener('click', () => {
   if (isAutoActive()) {
     stopAllAutoplay();
@@ -950,7 +1058,6 @@ document.querySelectorAll('.auto-choice').forEach(btn => {
   });
 });
 
-// Bonus Buy Flow
 btnBonusBuy.addEventListener('click', () => {
   if (state.isSpinning || state.freeSpins > 0 || isAutoActive()) return;
   document.getElementById('modal-buy-heading').textContent = state.socialMode ? 'GET FREE SPINS' : 'BUY FREE SPINS';
@@ -964,30 +1071,24 @@ document.getElementById('btn-buy-confirm').addEventListener('click', () => {
   handleSpin(true);
 });
 
-// Info / Rules Guide Modal
 document.getElementById('btn-info').addEventListener('click', () => {
   renderRulesModal();
   infoModal.classList.remove('hidden');
 });
 document.getElementById('btn-info-close').addEventListener('click', () => infoModal.classList.add('hidden'));
 
-// Spacebar Logic: Press once to spin (or stop auto); Hold down to engage continuous Space-Autoplay!
-let spaceDownTime = 0;
 let spaceHoldTimer = null;
-
 window.addEventListener('keydown', (e) => {
   if (e.code !== 'Space') return;
   if (!buyModal.classList.contains('hidden') || !infoModal.classList.contains('hidden') || !autoplayModal.classList.contains('hidden')) return;
   e.preventDefault();
   if (e.repeat) return;
 
-  // If autoplay is already running, pressing Space stops it immediately
   if (isAutoActive()) {
     stopAllAutoplay();
     return;
   }
 
-  spaceDownTime = performance.now();
   handleSpin(false);
 
   spaceHoldTimer = setTimeout(() => {
@@ -1004,7 +1105,6 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
-// Start Everything
 initVisualGuides();
 updateUI(0);
 requestAnimationFrame(renderLoop);
