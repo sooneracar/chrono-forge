@@ -3,29 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Chrono-Forge | Steampunk Clockwork Engine</title>
+  <title>Chrono-Forge | Grand Clockwork</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="game-wrapper">
-    <!-- Top Header & Mode Banner -->
+    <!-- Top Bar -->
     <header id="top-bar">
       <div class="title-plate">
-        <span class="rivet"></span>
+        <span class="gem-rivet"></span>
         <h1>CHRONO-FORGE</h1>
-        <span class="rivet"></span>
+        <span class="gem-rivet"></span>
       </div>
-      <div id="status-banner">ALIGN 3 SYMBOLS ON ANY POINTER (12, 3, 6, 9)</div>
+      <div id="status-banner">MATCH 3 SYMBOLS ON ANY POINTER (XII, III, VI, IX)</div>
       <div class="top-actions">
-        <button id="btn-sound" class="icon-btn" title="Toggle Sound">🔊</button>
-        <button id="btn-info" class="icon-btn" title="Game Rules & Paytable">i</button>
-        <button id="social-toggle" title="Toggle Stake.us Social Mode">STANDARD</button>
+        <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
+        <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
+        <button id="social-toggle" title="Switch Standard / Stake.us Social">STANDARD</button>
       </div>
     </header>
 
-    <!-- Main Playfield: Left Gauges & Bonus Buy | Center Clockwork | Right Alchemy Tube -->
+    <!-- Main Playfield -->
     <main id="playfield">
-      <!-- Left Info & Bonus Buy Panel -->
+      <!-- Left Panel: Free Spins, Bonus Buy & Visual Icon Paytable -->
       <aside id="left-panel">
         <div class="gauge-box">
           <div class="gauge-label">FREE SPINS</div>
@@ -33,30 +33,35 @@
         </div>
 
         <button id="btn-bonus-buy" class="bonus-buy-card">
-          <span id="lbl-buy-title" class="buy-title">BUY BONUS</span>
-          <span class="buy-sub">GRAND COMPLICATION</span>
+          <span id="lbl-buy-title" class="buy-title">BUY FREE SPINS</span>
+          <span class="buy-sub">3+ SCATTER KEYS GUARANTEED</span>
           <span id="val-buy-cost" class="buy-price">100.00</span>
         </button>
 
-        <div class="paytable-mini">
-          <div class="pt-title">3-RING ALIGN PAYS</div>
-          <div class="pt-row"><span class="dot wild"></span> Alchemy Core: <b>28.0x</b></div>
-          <div class="pt-row"><span class="dot ruby"></span> Crimson Ruby: <b>16.0x</b></div>
-          <div class="pt-row"><span class="dot emerald"></span> Forest Emerald: <b>6.5x</b></div>
-          <div class="pt-row"><span class="dot sapphire"></span> Royal Sapphire: <b>3.2x</b></div>
-          <div class="pt-row"><span class="dot gear"></span> Brass Gear: <b>1.6x</b></div>
-          <div class="pt-row"><span class="dot spring"></span> Steel Spring: <b>0.75x</b></div>
-          <div class="pt-row"><span class="dot nut"></span> Copper Nut: <b>0.35x</b></div>
-          <div class="pt-note">3+ Time Keys = 8 Free Spins</div>
+        <div class="paytable-visual">
+          <div class="pt-title">SYMBOL PAYOUTS (3-ALIGN)</div>
+          <div id="visual-paytable-list"></div>
+          <div class="pt-scatter-box">
+            <canvas class="mini-sym" data-sym="KEY" width="26" height="26"></canvas>
+            <div>
+              <strong>3+ KEYS = SCATTER</strong>
+              <span>Triggers 8 Free Spins!</span>
+            </div>
+          </div>
         </div>
       </aside>
 
-      <!-- Center Canvas for 3 Concentric Clockwork Gears -->
+      <!-- Center Clockwork Stage -->
       <section id="canvas-container">
-        <canvas id="clockwork-canvas" width="580" height="580"></canvas>
+        <canvas id="clockwork-canvas" width="620" height="620"></canvas>
+        <!-- Pragmatic Style Big Win Overlay -->
+        <div id="big-win-banner" class="hidden">
+          <div id="big-win-tier">BIG WIN!</div>
+          <div id="big-win-amount">0.00</div>
+        </div>
       </section>
 
-      <!-- Right Alchemy Multiplier Tube -->
+      <!-- Right Panel: Glowing Alchemy Vial -->
       <aside id="right-panel">
         <div class="tube-header">ALCHEMY</div>
         <div id="multiplier-tube">
@@ -74,65 +79,87 @@
       </aside>
     </main>
 
-    <!-- Bottom Brass Control Deck -->
+    <!-- Bottom Pragmatic-Style Control Deck -->
     <footer id="control-deck">
-      <div class="meter-box">
-        <span id="lbl-balance" class="meter-label">BALANCE</span>
-        <span id="val-balance" class="meter-num">1,000.00</span>
-      </div>
-
-      <div class="bet-controls">
-        <button id="btn-bet-down" class="brass-btn small">-</button>
-        <div class="meter-box compact">
+      <div class="deck-group">
+        <div class="meter-box">
+          <span id="lbl-balance" class="meter-label">CREDIT</span>
+          <span id="val-balance" class="meter-num">1,000.00</span>
+        </div>
+        <div class="meter-box">
           <span id="lbl-bet" class="meter-label">BET</span>
           <span id="val-bet" class="meter-num">1.00</span>
         </div>
-        <button id="btn-bet-up" class="brass-btn small">+</button>
       </div>
 
-      <button id="btn-spin" class="spin-medallion">
-        <span id="lbl-spin">SPIN</span>
-        <small>SPACE</small>
-      </button>
-
-      <div class="right-controls">
-        <button id="btn-mobile-buy" class="brass-btn gold-outline">BONUS (100x)</button>
-        <button id="btn-turbo" class="brass-btn">TURBO: OFF</button>
-      </div>
-
-      <div class="meter-box">
+      <div class="meter-box win-center">
         <span id="lbl-win" class="meter-label">WIN</span>
         <span id="val-win" class="meter-num highlight">0.00</span>
+      </div>
+
+      <div class="spin-cluster">
+        <button id="btn-bet-down" class="round-ctrl" title="Decrease Bet">−</button>
+
+        <button id="btn-spin" class="spin-medallion">
+          <span id="lbl-spin">⟳</span>
+          <small id="spin-sub-lbl">SPIN / HOLD SPACE</small>
+        </button>
+
+        <button id="btn-bet-up" class="round-ctrl" title="Increase Bet">+</button>
+
+        <button id="btn-autoplay" class="auto-btn">
+          <span id="auto-lbl">AUTOPLAY</span>
+          <small id="auto-count-badge"></small>
+        </button>
+
+        <button id="btn-turbo" class="brass-btn">TURBO</button>
       </div>
     </footer>
   </div>
 
-  <!-- Bonus Buy Confirmation Modal (Stake Engine Compliance for >2x features) -->
-  <div id="buy-modal" class="modal-overlay hidden">
+  <!-- Autoplay Selector Popover (10, 20, 50, 70, 100, 500) -->
+  <div id="autoplay-modal" class="modal-overlay hidden">
     <div class="modal-card">
-      <h2 id="modal-buy-heading">ACTIVATE GRAND COMPLICATION</h2>
-      <p id="modal-buy-desc">Guarantee 3+ Time Keys on the next spin to trigger 8 Free Spins with persistent Alchemy multipliers.</p>
-      <div class="modal-cost-box">
-        <span id="modal-buy-cost-lbl">COST (100x):</span>
-        <strong id="modal-buy-cost-val">100.00</strong>
+      <h2>AUTOPLAY SETTINGS</h2>
+      <p>Select number of automatic spins (or hold SPACEBAR to auto-spin):</p>
+      <div class="auto-grid">
+        <button class="auto-choice" data-spins="10">10</button>
+        <button class="auto-choice" data-spins="20">20</button>
+        <button class="auto-choice" data-spins="50">50</button>
+        <button class="auto-choice" data-spins="70">70</button>
+        <button class="auto-choice" data-spins="100">100</button>
+        <button class="auto-choice" data-spins="500">500</button>
       </div>
       <div class="modal-actions">
-        <button id="btn-buy-cancel" class="brass-btn">CANCEL</button>
-        <button id="btn-buy-confirm" class="brass-btn confirm-green">CONFIRM</button>
+        <button id="btn-auto-cancel" class="brass-btn">CANCEL</button>
       </div>
     </div>
   </div>
 
-  <!-- Game Rules & Paytable Modal (Stake Engine Mandatory Info Screen) -->
+  <!-- Bonus Buy Confirmation Modal -->
+  <div id="buy-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2 id="modal-buy-heading">BUY FREE SPINS</h2>
+      <p>Instantly land <b>3+ Golden Time Keys (Scatter)</b> to trigger <b>8 Grand Complication Free Spins</b> where the Alchemy Multiplier never resets!</p>
+      <div class="modal-cost-box">
+        <span>TOTAL COST (100x): </span>
+        <strong id="modal-buy-cost-val">100.00</strong>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-buy-cancel" class="brass-btn">CANCEL</button>
+        <button id="btn-buy-confirm" class="brass-btn confirm-green">START BONUS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Paytable & Rules Modal (i Button) -->
   <div id="info-modal" class="modal-overlay hidden">
     <div class="modal-card wide">
       <div class="modal-header">
-        <h2>CHRONO-FORGE — GAME RULES &amp; PAYTABLE</h2>
+        <h2>CHRONO-FORGE — SYMBOL GUIDE &amp; GAME RULES</h2>
         <button id="btn-info-close" class="icon-btn">✕</button>
       </div>
-      <div id="rules-content" class="rules-body">
-        <!-- Populated dynamically for Standard / Social mode compliance -->
-      </div>
+      <div id="rules-content" class="rules-body"></div>
     </div>
   </div>
 
