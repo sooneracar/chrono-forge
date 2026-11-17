@@ -1183,6 +1183,75 @@ window.addEventListener('keyup', (e) => {
   }
 });
 
+// ============================================================================
+// STAKE ENGINE RGS & MANDATORY REPLAY INTEGRATION (AETHER DIAL - PHASE 4)
+// ============================================================================
+let lastRoundRecord = null;
+const btnReplay = document.getElementById('btn-replay');
+btnReplay.disabled = true;
+
+const originalHandleSpin = handleSpin;
+handleSpin = async function (isBonusBuy = false, replayOverride = null) {
+  if (state.isSpinning) return;
+
+  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !replayOverride) {
+    try {
+      await window.StakeRGS.requestPlay(getBet(), isBonusBuy ? 'BONUS_BUY' : 'BASE');
+    } catch (e) {
+      statusBanner.textContent = 'RGS CONNECTION ERROR';
+      return;
+    }
+  }
+
+  const origRandom = Math.random;
+  if (replayOverride) {
+    const L = RING_OUTER.length;
+    const seq = [replayOverride.o / L, replayOverride.m / L, replayOverride.i / L];
+    let idx = 0;
+    Math.random = () => (idx < seq.length ? seq[idx++] : origRandom());
+    statusBanner.textContent = 'PLAYING CERTIFIED REPLAY...';
+  }
+
+  await originalHandleSpin(isBonusBuy);
+  Math.random = origRandom;
+
+  if (!replayOverride) {
+    lastRoundRecord = {
+      o: state.posOut,
+      m: state.posMid,
+      i: state.posIn,
+      bet: getBet()
+    };
+    btnReplay.disabled = false;
+  }
+
+  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !replayOverride) {
+    await window.StakeRGS.endRound();
+  }
+};
+
+btnReplay.addEventListener('click', () => {
+  if (!state.isSpinning && lastRoundRecord && state.freeSpins === 0) {
+    state.balance += getBet();
+    handleSpin(false, lastRoundRecord);
+  }
+});
+
+(async function bootStakeSession() {
+  if (!window.StakeRGS) return;
+  const session = await window.StakeRGS.init();
+  state.balance = session.balance;
+  if (session.social) state.socialMode = true;
+  if (session.replay) {
+    document.getElementById('replay-ribbon').classList.remove('hidden');
+    const parsed = window.StakeRGS.parseReplayData();
+    if (parsed) {
+      setTimeout(() => handleSpin(false, parsed), 600);
+    }
+  }
+  updateUI(0);
+})();
+
 initVisualGuides();
 updateUI(0);
 requestAnimationFrame(renderLoop);
