@@ -1397,7 +1397,10 @@ document.getElementById('btn-replay-close').addEventListener('click', closeRepla
   }
   updateUI(0);
 })();
-
+// Mobile Touch Audio Unlocker (ensures first tap plays spin.mp3 without delay)
+['touchstart', 'pointerdown'].forEach(evt => {
+  window.addEventListener(evt, () => SoundFX.init(), { once: true, passive: true });
+});
 initVisualGuides();
 updateUI(0);
 requestAnimationFrame(renderLoop);
