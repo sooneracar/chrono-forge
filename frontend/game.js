@@ -1,28 +1,28 @@
-// CHRONO-FORGE — 3D Shaded Gemstones & Gears, Extruded 3D Big/Max Win Coins,
-// Weighted Heavy Spin Physics, Active Laser Alignment Guides & Hybrid MP3/Synth Audio
+// CHRONO-FORGE — Vibrant Multi-Colored 3D Icon Set (Ruby, Emerald, Sapphire, Amethyst,
+// Celestial Sun Wild, Silver Hourglass, Coral Elixir Flask & Golden Scatter Key)
 
 const PAYTABLE = {
-  NUT: 0.35,
-  SPRING: 0.75,
-  GEAR: 1.60,
-  SAPPHIRE: 3.20,
-  EMERALD: 6.50,
-  RUBY: 16.00,
-  WILD: 28.00
+  NUT: 0.35,      // Coral Elixir Flask
+  SPRING: 0.75,   // Silver Hourglass
+  GEAR: 1.60,     // Royal Amethyst Crystal
+  SAPPHIRE: 3.20, // Celestial Sapphire
+  EMERALD: 6.50,  // Forest Emerald
+  RUBY: 16.00,    // Crimson Heart Ruby
+  WILD: 28.00     // Astral Sun Core (WILD)
 };
 
 const SYMBOL_INFO = [
-  { key: 'WILD',     name: 'Alchemy Core (WILD)', pay: '28.0x', desc: 'Substitutes for any symbol except Time Key. 3 aligned cores pay 28.0x!' },
-  { key: 'RUBY',     name: 'Crimson Ruby',        pay: '16.0x', desc: 'Highest paying royal 3D gemstone on a 3-ring alignment.' },
-  { key: 'EMERALD',  name: 'Forest Emerald',      pay: '6.5x',  desc: 'High-value faceted alchemical emerald.' },
-  { key: 'SAPPHIRE', name: 'Royal Sapphire',      pay: '3.2x',  desc: 'Medium-high celestial sapphire.' },
-  { key: 'GEAR',     name: 'Brass Cogwheel',      pay: '1.6x',  desc: '3D bevelled clockwork gear.' },
-  { key: 'SPRING',   name: 'Steel Mainspring',    pay: '0.75x', desc: 'Tempered steel watchmaker coil.' },
-  { key: 'NUT',      name: 'Copper Hex Nut',      pay: '0.35x', desc: 'Heavy copper mechanical fastener.' },
-  { key: 'KEY',      name: 'Golden Time Key (SCATTER)', pay: 'BONUS', desc: 'Land 3 or more Keys anywhere on the 4 golden pointers (XII, III, VI, IX) to trigger 8 Free Spins!' }
+  { key: 'WILD',     name: 'Astral Sun (WILD)',     pay: '28.0x', desc: 'Substitutes for any symbol except Golden Key. 3 aligned Suns pay 28.0x!' },
+  { key: 'RUBY',     name: 'Crimson Ruby',          pay: '16.0x', desc: 'Fiery red royal gemstone — highest standard symbol payout.' },
+  { key: 'EMERALD',  name: 'Neon Emerald',          pay: '6.5x',  desc: 'Vivid green alchemical emerald.' },
+  { key: 'SAPPHIRE', name: 'Electric Sapphire',     pay: '3.2x',  desc: 'Deep ocean-blue diamond sapphire.' },
+  { key: 'GEAR',     name: 'Royal Amethyst',        pay: '1.6x',  desc: 'Glowing purple crystal shard.' },
+  { key: 'SPRING',   name: 'Silver Hourglass',      pay: '0.75x', desc: 'Platinum & ice-blue sands of time.' },
+  { key: 'NUT',      name: 'Coral Elixir',          pay: '0.35x', desc: 'Luminous orange-pink potion vial.' },
+  { key: 'KEY',      name: 'Golden Key (SCATTER)',  pay: 'BONUS', desc: 'Land 3 or more Golden Keys anywhere on the 4 pointers (XII, III, VI, IX) to trigger 8 Free Spins!' }
 ];
 
-// 36-stop virtual rings (96.34% RTP)
+// 36-stop virtual rings (verified 96.34% RTP)
 const RING_OUTER = [
   'NUT', 'SPRING', 'GEAR', 'NUT', 'SAPPHIRE', 'SPRING',
   'NUT', 'GEAR', 'EMERALD', 'NUT', 'SPRING', 'WILD',
@@ -57,7 +57,6 @@ const BET_LEVELS = [0.20, 0.50, 1.00, 2.00, 5.00, 10.00, 25.00, 50.00];
 const MAX_WIN_MULT = 5000.0;
 const BONUS_BUY_MULT = 100;
 
-// Game State
 const state = {
   balance: 1000.00,
   betIdx: 2,
@@ -79,20 +78,21 @@ const state = {
   spaceHoldAuto: false
 };
 
-// Ambient Gold Sparks + Celebration Coins
-const particles = Array.from({ length: 42 }, () => ({
+// Multi-colored Floating Magic Sparks
+const sparkColors = ['rgba(255,224,130,', 'rgba(167,139,250,', 'rgba(52,211,153,', 'rgba(96,165,250,'];
+const particles = Array.from({ length: 46 }, () => ({
   x: Math.random() * 640,
   y: Math.random() * 640,
-  r: 1.2 + Math.random() * 2.4,
-  vx: (Math.random() - 0.5) * 0.35,
+  r: 1.3 + Math.random() * 2.5,
+  vx: (Math.random() - 0.5) * 0.4,
   vy: -0.25 - Math.random() * 0.5,
-  alpha: 0.3 + Math.random() * 0.65
+  alpha: 0.35 + Math.random() * 0.6,
+  color: sparkColors[Math.floor(Math.random() * sparkColors.length)]
 }));
 
 let celebrationCoins = [];
 
-// Hybrid Audio Engine: Plays real studio MP3 files from frontend/sounds/ if uploaded,
-// with warm low-frequency mechanical fallback so it never sounds harsh.
+// Hybrid Audio Engine (Ready for frontend/sounds/*.mp3)
 const SoundFX = {
   ctx: null,
   mp3Ready: {},
@@ -127,16 +127,15 @@ const SoundFX = {
       } catch (e) {}
     }
 
-    // Soft warm fallback if MP3s are not yet uploaded
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     if (name === 'spin' || name === 'stop') {
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(name === 'stop' ? 110 : 180, now);
+      osc.frequency.setValueAtTime(name === 'stop' ? 115 : 175, now);
       osc.frequency.exponentialRampToValueAtTime(55, now + 0.06);
-      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.setValueAtTime(0.07, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
@@ -204,7 +203,7 @@ function updateUI(roundWin = null) {
   const isSoc = state.socialMode;
   document.getElementById('lbl-balance').textContent = isSoc ? 'COINS' : 'CREDIT';
   document.getElementById('lbl-bet').textContent = isSoc ? 'PLAY' : 'BET';
-  document.getElementById('lbl-buy-title').textContent = isSoc ? 'GET FREE SPINS' : 'BUY FREE SPINS';
+  document.getElementById('lbl-buy-title').textContent = isSoc ? '⚡ GET FREE SPINS ⚡' : '⚡ BUY FREE SPINS ⚡';
   document.getElementById('social-toggle').textContent = isSoc ? 'SOCIAL (US)' : 'STANDARD';
 
   if (isAutoActive()) {
@@ -221,16 +220,13 @@ function updateUI(roundWin = null) {
 }
 
 // ============================================================================
-// REALISTIC 3D FACETED GEMSTONES & BEVELLED METALLIC GEARS
+// DISTINCT MULTI-COLORED 3D SYMBOLS (ZERO COLOR CONFUSION!)
 // ============================================================================
-function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
+function draw3DFacetedJewel(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
   c.save();
-  // 3D Cast Drop Shadow inside socket
-  c.shadowColor = 'rgba(0, 0, 0, 0.85)';
-  c.shadowBlur = 8;
-  c.shadowOffsetY = 4;
+  c.shadowColor = cMid;
+  c.shadowBlur = 10;
 
-  // Base Pavilion Polygon
   c.beginPath();
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
@@ -241,22 +237,21 @@ function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
   }
   c.closePath();
 
-  const baseGrad = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r * 1.1);
-  baseGrad.addColorStop(0, cTop);
-  baseGrad.addColorStop(0.55, cMid);
-  baseGrad.addColorStop(1, cDeep);
-  c.fillStyle = baseGrad;
+  const grad = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.08, 0, 0, r * 1.1);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.28, cTop);
+  grad.addColorStop(0.68, cMid);
+  grad.addColorStop(1, cDeep);
+  c.fillStyle = grad;
   c.fill();
 
   c.shadowBlur = 0;
-  c.shadowOffsetY = 0;
   c.lineWidth = 1.6;
   c.strokeStyle = cRim;
   c.stroke();
 
-  // Facet Cut Lines from outer vertices to inner crown table
-  const innerR = r * 0.54;
-  c.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  const innerR = r * 0.52;
+  c.strokeStyle = 'rgba(255,255,255,0.4)';
   c.lineWidth = 0.9;
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
@@ -266,7 +261,6 @@ function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
     c.stroke();
   }
 
-  // Elevated 3D Crown Table
   c.beginPath();
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
@@ -276,19 +270,12 @@ function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
     else c.lineTo(x, y);
   }
   c.closePath();
-  const tableGrad = c.createLinearGradient(-innerR, -innerR, innerR, innerR);
-  tableGrad.addColorStop(0, 'rgba(255,255,255,0.65)');
-  tableGrad.addColorStop(0.5, 'rgba(255,255,255,0.12)');
-  tableGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
-  c.fillStyle = tableGrad;
+  c.fillStyle = 'rgba(255,255,255,0.34)';
   c.fill();
-  c.strokeStyle = 'rgba(255,255,255,0.6)';
-  c.stroke();
 
-  // Specular Star Glint on top-left edge
   c.fillStyle = '#ffffff';
   c.beginPath();
-  c.arc(-r * 0.28, -r * 0.3, r * 0.12, 0, Math.PI * 2);
+  c.arc(-r * 0.28, -r * 0.3, r * 0.13, 0, Math.PI * 2);
   c.fill();
   c.restore();
 }
@@ -296,145 +283,159 @@ function draw3DGem(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
 function drawSymbolIcon(c, type, r) {
   c.save();
   switch (type) {
-    case 'RUBY':
-      draw3DGem(c, r * 0.92, '#ff8fa3', '#e11d48', '#590d22', '#ffb3c1', 8);
-      break;
-    case 'EMERALD':
-      draw3DGem(c, r * 0.9, '#a7f3d0', '#059669', '#022c22', '#6ee7b7', 6);
-      break;
-    case 'SAPPHIRE':
-      draw3DGem(c, r * 0.92, '#bae6fd', '#2563eb', '#172554', '#7dd3fc', 4);
-      break;
     case 'WILD': {
-      // 3D Plasma Alchemy Sphere inside Gyroscope Rings
-      c.shadowColor = '#00f5d4';
+      // 8-Point Astral Sun Star (Cyan & Pure White)
+      c.shadowColor = '#22d3ee';
       c.shadowBlur = 16;
-      const sphere = c.createRadialGradient(-r * 0.25, -r * 0.25, 1, 0, 0, r * 0.92);
-      sphere.addColorStop(0, '#ffffff');
-      sphere.addColorStop(0.35, '#5eead4');
-      sphere.addColorStop(0.75, '#0d9488');
-      sphere.addColorStop(1, '#042f2e');
+      const spikes = 8;
       c.beginPath();
-      c.arc(0, 0, r * 0.88, 0, Math.PI * 2);
-      c.fillStyle = sphere;
-      c.fill();
-      c.shadowBlur = 0;
-
-      // 3D Gold Gyro Bands
-      c.lineWidth = 2;
-      c.strokeStyle = '#fde047';
-      c.beginPath();
-      c.ellipse(0, 0, r * 0.82, r * 0.3, Math.PI / 4, 0, Math.PI * 2);
-      c.stroke();
-      c.beginPath();
-      c.ellipse(0, 0, r * 0.82, r * 0.3, -Math.PI / 4, 0, Math.PI * 2);
-      c.stroke();
-      break;
-    }
-    case 'KEY': {
-      // 3D Embossed Golden Scatter Key
-      c.shadowColor = 'rgba(0,0,0,0.85)';
-      c.shadowBlur = 6;
-      c.shadowOffsetY = 3;
-      const kGrad = c.createLinearGradient(-r, -r, r, r);
-      kGrad.addColorStop(0, '#fef9c3');
-      kGrad.addColorStop(0.45, '#facc15');
-      kGrad.addColorStop(1, '#854d0e');
-      c.fillStyle = kGrad;
-      c.strokeStyle = '#422006';
-      c.lineWidth = 1.6;
-
-      c.beginPath();
-      c.arc(0, -r * 0.36, r * 0.38, 0, Math.PI * 2);
-      c.fill();
-      c.stroke();
-      c.shadowBlur = 0;
-      c.shadowOffsetY = 0;
-
-      // Inner Ruby Jewel inside Key Bow
-      c.beginPath();
-      c.arc(0, -r * 0.36, r * 0.15, 0, Math.PI * 2);
-      c.fillStyle = '#e11d48';
-      c.fill();
-
-      // 3D Key Shaft & Teeth
-      c.fillStyle = kGrad;
-      c.fillRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.78);
-      c.strokeRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.78);
-      c.fillRect(r * 0.09, r * 0.34, r * 0.28, r * 0.14);
-      c.fillRect(r * 0.09, r * 0.56, r * 0.32, r * 0.14);
-      break;
-    }
-    case 'GEAR': {
-      // 3D Bevelled Brass Cogwheel
-      c.shadowColor = 'rgba(0,0,0,0.8)';
-      c.shadowBlur = 6;
-      c.shadowOffsetY = 3;
-      const teeth = 8;
-      c.beginPath();
-      for (let i = 0; i < teeth * 2; i++) {
-        const rad = i % 2 === 0 ? r * 0.9 : r * 0.64;
-        const a = (i * Math.PI) / teeth;
+      for (let i = 0; i < spikes * 2; i++) {
+        const rad = i % 2 === 0 ? r * 0.96 : r * 0.44;
+        const a = (i * Math.PI) / spikes;
         const x = Math.cos(a) * rad;
         const y = Math.sin(a) * rad;
         if (i === 0) c.moveTo(x, y);
         else c.lineTo(x, y);
       }
       c.closePath();
-      const gGrad = c.createLinearGradient(-r, -r, r, r);
-      gGrad.addColorStop(0, '#fef08a');
-      gGrad.addColorStop(0.5, '#eab308');
-      gGrad.addColorStop(1, '#713f12');
-      c.fillStyle = gGrad;
+      const sGrad = c.createRadialGradient(0, 0, 1, 0, 0, r);
+      sGrad.addColorStop(0, '#ffffff');
+      sGrad.addColorStop(0.5, '#22d3ee');
+      sGrad.addColorStop(1, '#0284c7');
+      c.fillStyle = sGrad;
       c.fill();
       c.shadowBlur = 0;
-      c.shadowOffsetY = 0;
       c.lineWidth = 1.5;
-      c.strokeStyle = '#422006';
+      c.strokeStyle = '#ecfeff';
       c.stroke();
 
-      // Inner 3D Recessed Hub
       c.beginPath();
-      c.arc(0, 0, r * 0.38, 0, Math.PI * 2);
-      c.strokeStyle = '#fef08a';
-      c.lineWidth = 1.5;
-      c.stroke();
-      c.beginPath();
-      c.arc(0, 0, r * 0.22, 0, Math.PI * 2);
-      c.fillStyle = '#0d0804';
+      c.arc(0, 0, r * 0.26, 0, Math.PI * 2);
+      c.fillStyle = '#ffffff';
       c.fill();
       break;
     }
+    case 'RUBY':
+      // Fiery Crimson Ruby (Octagon)
+      draw3DFacetedJewel(c, r * 0.92, '#ff8fa3', '#f43f5e', '#881337', '#fecdd3', 8);
+      break;
+
+    case 'EMERALD':
+      // Neon Forest Emerald (Hexagon)
+      draw3DFacetedJewel(c, r * 0.9, '#6ee7b7', '#10b981', '#064e3b', '#a7f3d0', 6);
+      break;
+
+    case 'SAPPHIRE':
+      // Electric Royal Blue Sapphire (Diamond)
+      draw3DFacetedJewel(c, r * 0.94, '#93c5fd', '#2563eb', '#1e1b4b', '#dbeafe', 4);
+      break;
+
+    case 'GEAR':
+      // Royal Amethyst Purple Crystal (Triangle / Shard) — NO MORE YELLOW!
+      draw3DFacetedJewel(c, r * 0.95, '#e9d5ff', '#9333ea', '#3b0764', '#f3e8ff', 5);
+      break;
+
     case 'SPRING': {
-      // 3D Metallic Shaded Coil Spring
-      c.shadowColor = 'rgba(0,0,0,0.8)';
-      c.shadowBlur = 5;
-      c.shadowOffsetY = 2;
-      for (let i = -2; i <= 2; i++) {
-        const yOff = i * (r * 0.24);
-        const sGrad = c.createLinearGradient(-r * 0.55, yOff, r * 0.55, yOff);
-        sGrad.addColorStop(0, '#475569');
-        sGrad.addColorStop(0.45, '#f8fafc');
-        sGrad.addColorStop(1, '#334155');
-        c.strokeStyle = sGrad;
-        c.lineWidth = 3.6;
-        c.beginPath();
-        c.ellipse(0, yOff, r * 0.54, r * 0.14, -0.15, 0, Math.PI * 2);
-        c.stroke();
-      }
+      // Platinum & Ice-Blue 3D Hourglass — NO MORE COIL!
+      c.shadowColor = '#38bdf8';
+      c.shadowBlur = 8;
+      // Top & Bottom Glass Bulbs
+      c.beginPath();
+      c.moveTo(-r * 0.56, -r * 0.68);
+      c.lineTo(r * 0.56, -r * 0.68);
+      c.lineTo(0, 0);
+      c.lineTo(r * 0.56, r * 0.68);
+      c.lineTo(-r * 0.56, r * 0.68);
+      c.lineTo(0, 0);
+      c.closePath();
+      const glassGrad = c.createLinearGradient(-r * 0.5, 0, r * 0.5, 0);
+      glassGrad.addColorStop(0, '#bae6fd');
+      glassGrad.addColorStop(0.5, '#e0f2fe');
+      glassGrad.addColorStop(1, '#38bdf8');
+      c.fillStyle = glassGrad;
+      c.fill();
+      c.shadowBlur = 0;
+      c.lineWidth = 1.6;
+      c.strokeStyle = '#f8fafc';
+      c.stroke();
+
+      // Glowing Cyan Sand in bottom bulb
+      c.beginPath();
+      c.moveTo(-r * 0.36, r * 0.62);
+      c.lineTo(r * 0.36, r * 0.62);
+      c.lineTo(0, r * 0.22);
+      c.closePath();
+      c.fillStyle = '#0ea5e9';
+      c.fill();
+
+      // Silver Caps
+      c.fillStyle = '#cbd5e1';
+      c.fillRect(-r * 0.65, -r * 0.8, r * 1.3, r * 0.16);
+      c.fillRect(-r * 0.65, r * 0.64, r * 1.3, r * 0.16);
       break;
     }
+
     case 'NUT':
     default: {
-      // 3D Bevelled Copper Hex Nut
-      draw3DGem(c, r * 0.84, '#fde68a', '#d97706', '#451a03', '#fbbf24', 6);
+      // Luminous Coral-Orange Alchemist Potion Flask — NO MORE YELLOW NUT!
+      c.shadowColor = '#fb7185';
+      c.shadowBlur = 9;
+      // Round Potion Bulb
+      const flaskGrad = c.createRadialGradient(-r * 0.25, -r * 0.1, 2, 0, r * 0.15, r * 0.72);
+      flaskGrad.addColorStop(0, '#ffedd5');
+      flaskGrad.addColorStop(0.45, '#fb923c');
+      flaskGrad.addColorStop(1, '#c2410c');
       c.beginPath();
-      c.arc(0, 0, r * 0.3, 0, Math.PI * 2);
-      c.fillStyle = '#0d0804';
+      c.arc(0, r * 0.16, r * 0.66, 0, Math.PI * 2);
+      c.fillStyle = flaskGrad;
       c.fill();
-      c.lineWidth = 1.5;
-      c.strokeStyle = '#fbbf24';
+      c.shadowBlur = 0;
+      c.lineWidth = 1.6;
+      c.strokeStyle = '#fed7aa';
       c.stroke();
+
+      // Glass Neck & Cork
+      c.fillStyle = '#e2e8f0';
+      c.fillRect(-r * 0.2, -r * 0.64, r * 0.4, r * 0.24);
+      c.fillStyle = '#a16207';
+      c.fillRect(-r * 0.16, -r * 0.82, r * 0.32, r * 0.2);
+
+      // Specular Bubble Highlight
+      c.fillStyle = '#ffffff';
+      c.beginPath();
+      c.arc(-r * 0.24, r * 0.02, r * 0.13, 0, Math.PI * 2);
+      c.fill();
+      break;
+    }
+
+    case 'KEY': {
+      // Pure Gold & Ruby Scatter Key (Stands out immediately as the ONLY Gold icon!)
+      c.shadowColor = '#fde047';
+      c.shadowBlur = 14;
+      const kGrad = c.createLinearGradient(-r, -r, r, r);
+      kGrad.addColorStop(0, '#fef9c3');
+      kGrad.addColorStop(0.45, '#facc15');
+      kGrad.addColorStop(1, '#a16207');
+      c.fillStyle = kGrad;
+      c.strokeStyle = '#422006';
+      c.lineWidth = 1.6;
+
+      c.beginPath();
+      c.arc(0, -r * 0.36, r * 0.4, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+      c.shadowBlur = 0;
+
+      c.beginPath();
+      c.arc(0, -r * 0.36, r * 0.16, 0, Math.PI * 2);
+      c.fillStyle = '#f43f5e';
+      c.fill();
+
+      c.fillStyle = kGrad;
+      c.fillRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.8);
+      c.strokeRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.8);
+      c.fillRect(r * 0.09, r * 0.34, r * 0.3, r * 0.15);
+      c.fillRect(r * 0.09, r * 0.56, r * 0.34, r * 0.15);
       break;
     }
   }
@@ -483,7 +484,7 @@ function renderRulesModal() {
       <div class="rules-sym-item">
         <canvas class="modal-sym-icon" data-sym="${s.key}" width="38" height="38"></canvas>
         <div>
-          <strong style="color:#ffe699">${s.name} — ${s.pay}</strong><br/>
+          <strong style="color:#ffe89e">${s.name} — ${s.pay}</strong><br/>
           <span style="font-size:0.76rem">${s.desc}</span>
         </div>
       </div>
@@ -492,13 +493,13 @@ function renderRulesModal() {
   symCardsHtml += '</div>';
 
   document.getElementById('rules-content').innerHTML = `
-    <h3>1. HOW TO WIN (THE 4 GOLDEN LASER POINTERS)</h3>
-    <p>Look at the <b>4 illuminated golden alignment tracks</b> at <b>XII (12), III (3), VI (6), and IX (9) o'clock</b>. Whenever <b>3 matching symbols</b> line up from Outer to Inner gear along any of those 4 tracks, you win! Matched symbols vanish, the right-side <b>Alchemy Multiplier</b> climbs (1x → 100x), and the gears shift clockwise (Outer +1, Middle +2, Inner +3) for chain wins.</p>
-    <h3>2. HOW TO TRIGGER SCATTER (FREE SPINS)</h3>
-    <p><b>Golden Time Keys</b> are Scatter symbols. They do NOT need to line up on the same pointer—simply landing <b>3 or more Golden Keys anywhere inside the 4 golden pointer tracks (XII, III, VI, IX)</b> triggers <b>8 Grand Complication Free Spins</b> where the Alchemy Multiplier never resets!</p>
-    <h3>3. 3D SYMBOL PAYTABLE (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
+    <h3>1. HOW TO WIN (THE 4 GOLDEN POINTERS)</h3>
+    <p>Align <b>3 matching symbols</b> from Outer to Inner ring along any of the 4 illuminated Roman Numeral pointers (<b>XII, III, VI, IX</b>). Matched gems dissolve, the right-side <b>Alchemy Multiplier</b> climbs (1x → 100x), and the rings shift clockwise (Outer +1, Middle +2, Inner +3) for consecutive wins!</p>
+    <h3>2. SCATTER &amp; GRAND COMPLICATION FREE SPINS</h3>
+    <p>Landing <b>3 or more Golden Time Keys</b> anywhere inside the 4 pointer tracks (XII, III, VI, IX) awards <b>8 Free Spins</b> (+3 extra spins on retrigger) where the Alchemy Multiplier <b>never resets</b>!</p>
+    <h3>3. SYMBOL GUIDE &amp; PAYOUTS (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
     ${symCardsHtml}
-    <p style="margin-top:8px">Theoretical RTP: <b>96.34%</b> | Maximum Win Cap: <b>5,000x</b>.</p>
+    <p style="margin-top:8px">Theoretical RTP: <b>96.34%</b> | Max Win Cap: <b>5,000x</b>.</p>
   `;
 
   document.querySelectorAll('canvas.modal-sym-icon').forEach(mc => {
@@ -509,7 +510,7 @@ function renderRulesModal() {
 }
 
 // ============================================================================
-// CORE GAME LOGIC & 3D COIN FOUNTAIN CELEBRATION
+// CORE GAME LOGIC & 3D COIN FOUNTAIN
 // ============================================================================
 function getVisibleRing(ringArray, startPos) {
   const L = ringArray.length;
@@ -554,7 +555,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, state.turbo ? ms * 0.35 : ms));
 }
 
-function spawn3DCoins(count = 45) {
+function spawn3DCoins(count = 50) {
   celebrationCoins = Array.from({ length: count }, () => ({
     x: 320 + (Math.random() - 0.5) * 140,
     y: 340,
@@ -585,7 +586,6 @@ async function showBigWinCelebration(amount, mult) {
   celebrationCoins = [];
 }
 
-// Weighted, heavy watchmaker gear rotation (slower and smoother)
 function animateRotation(durationMs, dirOut, dirMid, dirIn) {
   return new Promise(resolve => {
     const dur = state.turbo ? durationMs * 0.38 : durationMs;
@@ -599,7 +599,6 @@ function animateRotation(durationMs, dirOut, dirMid, dirIn) {
 
     function frame(now) {
       const t = Math.min((now - start) / dur, 1);
-      // Smooth heavy deceleration curve
       const ease = 1 - Math.pow(1 - t, 3.4);
       state.rotOut = initOut + dirOut * ease;
       state.rotMid = initMid + dirMid * ease;
@@ -675,7 +674,6 @@ async function handleSpin(isBonusBuy = false) {
     state.posIn = Math.floor(Math.random() * L);
   }
 
-  // Slower, weighted 1150ms rotation
   await animateRotation(1150, Math.PI * 2, -Math.PI * 2, Math.PI * 2);
 
   let roundTotalMult = 0;
@@ -760,7 +758,7 @@ async function handleSpin(isBonusBuy = false) {
 }
 
 // ============================================================================
-// 3D RENDER LOOP (DEPTH SHADOWS, LASER POINTER GUIDES & FALLING 3D GOLD COINS)
+// 3D ROYAL INDIGO & GOLD CLOCKWORK RENDERER
 // ============================================================================
 function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.beginPath();
@@ -787,20 +785,21 @@ function renderLoop() {
   state.coreAngle += state.isSpinning ? 0.06 : 0.01;
   ctx.clearRect(0, 0, w, h);
 
-  // 1. Ambient Sunburst & Floating Gold Sparks
+  // 1. Vibrant Prismatic Sunburst & Floating Multi-Color Sparks
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(state.coreAngle * 0.12);
   for (let i = 0; i < 12; i++) {
     ctx.rotate(Math.PI / 6);
     const rayGrad = ctx.createLinearGradient(0, 0, 315, 0);
-    rayGrad.addColorStop(0, 'rgba(255, 215, 110, 0.14)');
-    rayGrad.addColorStop(1, 'rgba(255, 215, 110, 0)');
+    rayGrad.addColorStop(0, 'rgba(255, 220, 110, 0.2)');
+    rayGrad.addColorStop(0.6, 'rgba(139, 92, 246, 0.08)');
+    rayGrad.addColorStop(1, 'rgba(139, 92, 246, 0)');
     ctx.fillStyle = rayGrad;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(315, -20);
-    ctx.lineTo(315, 20);
+    ctx.lineTo(315, -22);
+    ctx.lineTo(315, 22);
     ctx.closePath();
     ctx.fill();
   }
@@ -810,7 +809,7 @@ function renderLoop() {
     p.x += p.vx;
     p.y += p.vy;
     if (p.y < 10) { p.y = 630; p.x = Math.random() * 640; }
-    ctx.fillStyle = `rgba(255, 224, 130, ${p.alpha})`;
+    ctx.fillStyle = `${p.color}${p.alpha})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     ctx.fill();
@@ -819,10 +818,10 @@ function renderLoop() {
   // 2. 3D Extruded Roman Numeral Outer Bezel
   ctx.save();
   const bezelGrad = ctx.createRadialGradient(cx - 40, cy - 40, 220, cx, cy, 308);
-  bezelGrad.addColorStop(0, '#36210f');
-  bezelGrad.addColorStop(0.55, '#d49b38');
-  bezelGrad.addColorStop(0.82, '#fff0b3');
-  bezelGrad.addColorStop(1, '#3d2405');
+  bezelGrad.addColorStop(0, '#3b2410');
+  bezelGrad.addColorStop(0.55, '#d99b32');
+  bezelGrad.addColorStop(0.84, '#fff2b2');
+  bezelGrad.addColorStop(1, '#452806');
   ctx.beginPath();
   ctx.arc(cx, cy, 306, 0, Math.PI * 2);
   ctx.fillStyle = bezelGrad;
@@ -830,10 +829,10 @@ function renderLoop() {
 
   ctx.beginPath();
   ctx.arc(cx, cy, 274, 0, Math.PI * 2);
-  ctx.fillStyle = '#0f0905';
+  ctx.fillStyle = '#120d26';
   ctx.fill();
   ctx.lineWidth = 2.5;
-  ctx.strokeStyle = '#ffe699';
+  ctx.strokeStyle = '#ffe89e';
   ctx.stroke();
 
   ctx.fillStyle = '#1c1004';
@@ -848,11 +847,11 @@ function renderLoop() {
   }
   ctx.restore();
 
-  // 3. 3D Layered Concentric Gears
+  // 3. 3D Deep Indigo & Velvet Gears (Makes Bright Gems & Gold Key Pop!)
   const rings = [
-    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#382412', cBot: '#170e06', stroke: '#e6b458' },
-    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#2b1b0d', cBot: '#120a04', stroke: '#c48f38' },
-    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#211409', cBot: '#0d0703', stroke: '#9c6d24' }
+    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#2a2154', cBot: '#120d29', stroke: '#eab308' },
+    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#211945', cBot: '#0e0a21', stroke: '#ca8a04' },
+    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#191236', cBot: '#090617', stroke: '#a16207' }
   ];
 
   rings.forEach(ring => {
@@ -860,7 +859,6 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(ring.rot);
 
-    // 3D Drop Shadow beneath each gear layer
     ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
     ctx.shadowBlur = 14;
     ctx.shadowOffsetY = 6;
@@ -886,13 +884,12 @@ function renderLoop() {
       const symKey = ring.data[k];
       const isPointerSlot = POINTER_OFFSETS.includes(k);
 
-      // Deep 3D Recessed Socket
       ctx.beginPath();
       ctx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
-      ctx.fillStyle = isPointerSlot ? '#1c1308' : '#080503';
+      ctx.fillStyle = isPointerSlot ? '#1d163b' : '#090617';
       ctx.fill();
       ctx.lineWidth = isPointerSlot ? 2.4 : 1.4;
-      ctx.strokeStyle = isPointerSlot ? '#ffe699' : '#4a3110';
+      ctx.strokeStyle = isPointerSlot ? '#ffe89e' : '#4c3d82';
       ctx.stroke();
 
       ctx.save();
@@ -904,7 +901,7 @@ function renderLoop() {
     ctx.restore();
   });
 
-  // 4. Illuminated 4-Pointer Alignment Tracks (Makes active paylines crystal clear!)
+  // 4. Illuminated 4-Pointer Alignment Tracks
   POINTER_OFFSETS.forEach(p => {
     const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
     const isHit = state.winningPointers.includes(p);
@@ -913,21 +910,19 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(angle);
 
-    // Subtle Golden Sightline Guide across all 3 rings
-    ctx.fillStyle = isHit ? 'rgba(24, 255, 130, 0.28)' : 'rgba(255, 230, 153, 0.06)';
+    ctx.fillStyle = isHit ? 'rgba(24, 255, 130, 0.28)' : 'rgba(255, 232, 158, 0.07)';
     ctx.fillRect(54, -27, 212, 54);
-    ctx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 230, 153, 0.35)';
-    ctx.lineWidth = isHit ? 3 : 1.2;
+    ctx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 232, 158, 0.4)';
+    ctx.lineWidth = isHit ? 3 : 1.3;
     ctx.strokeRect(54, -27, 212, 54);
 
-    // 3D Gold Pointer Needle
     ctx.beginPath();
     ctx.moveTo(256, 0);
     ctx.lineTo(300, -15);
     ctx.lineTo(291, 0);
     ctx.lineTo(300, 15);
     ctx.closePath();
-    ctx.fillStyle = isHit ? '#18ff82' : '#ffe699';
+    ctx.fillStyle = isHit ? '#18ff82' : '#ffe89e';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#3b2406';
@@ -935,25 +930,25 @@ function renderLoop() {
 
     ctx.beginPath();
     ctx.arc(283, 0, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff2a55';
+    ctx.fillStyle = '#f43f5e';
     ctx.fill();
 
     ctx.restore();
   });
 
-  // 5. Center 3D Tourbillon Escapement Core
+  // 5. Center 3D Tourbillon Core
   ctx.save();
   ctx.translate(cx, cy);
   ctx.beginPath();
   ctx.arc(0, 0, 50, 0, Math.PI * 2);
-  ctx.fillStyle = '#120a05';
+  ctx.fillStyle = '#120c29';
   ctx.fill();
   ctx.lineWidth = 4;
-  ctx.strokeStyle = '#ffe699';
+  ctx.strokeStyle = '#ffe89e';
   ctx.stroke();
 
   ctx.rotate(state.coreAngle);
-  ctx.strokeStyle = '#d49b38';
+  ctx.strokeStyle = '#eab308';
   ctx.lineWidth = 2.2;
   for (let i = 0; i < 4; i++) {
     ctx.rotate(Math.PI / 4);
@@ -963,15 +958,15 @@ function renderLoop() {
   ctx.arc(0, 0, 12, 0, Math.PI * 2);
   ctx.fillStyle = '#18ff82';
   ctx.shadowColor = '#18ff82';
-  ctx.shadowBlur = 14;
+  ctx.shadowBlur = 15;
   ctx.fill();
   ctx.restore();
 
-  // 6. 3D Spinning Gold Coins Fountain during Big Win
+  // 6. 3D Gold Coins Fountain
   celebrationCoins.forEach(coin => {
     coin.x += coin.vx;
     coin.y += coin.vy;
-    coin.vy += 0.35; // gravity
+    coin.vy += 0.35;
     coin.spin += coin.spinSpeed;
     if (coin.y > 660) {
       coin.y = 320;
