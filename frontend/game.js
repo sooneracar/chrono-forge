@@ -1,12 +1,12 @@
-// CHRONO-FORGE — Vibrant Multi-Colored 3D Icon Set (Ruby, Emerald, Sapphire, Amethyst,
-// Celestial Sun Wild, Silver Hourglass, Coral Elixir Flask & Golden Scatter Key)
+// CHRONO-FORGE — High-Contrast 3D Gemstones on Obsidian Velvet Sockets
+// & High-Visibility Illuminated 4-Pointer Alignment Corridors
 
 const PAYTABLE = {
   NUT: 0.35,      // Coral Elixir Flask
-  SPRING: 0.75,   // Silver Hourglass
-  GEAR: 1.60,     // Royal Amethyst Crystal
-  SAPPHIRE: 3.20, // Celestial Sapphire
-  EMERALD: 6.50,  // Forest Emerald
+  SPRING: 0.75,   // Platinum & Amber Hourglass
+  GEAR: 1.60,     // Neon Magenta Crystal
+  SAPPHIRE: 3.20, // Electric Cyan Diamond
+  EMERALD: 6.50,  // Vivid Forest Emerald
   RUBY: 16.00,    // Crimson Heart Ruby
   WILD: 28.00     // Astral Sun Core (WILD)
 };
@@ -15,11 +15,11 @@ const SYMBOL_INFO = [
   { key: 'WILD',     name: 'Astral Sun (WILD)',     pay: '28.0x', desc: 'Substitutes for any symbol except Golden Key. 3 aligned Suns pay 28.0x!' },
   { key: 'RUBY',     name: 'Crimson Ruby',          pay: '16.0x', desc: 'Fiery red royal gemstone — highest standard symbol payout.' },
   { key: 'EMERALD',  name: 'Neon Emerald',          pay: '6.5x',  desc: 'Vivid green alchemical emerald.' },
-  { key: 'SAPPHIRE', name: 'Electric Sapphire',     pay: '3.2x',  desc: 'Deep ocean-blue diamond sapphire.' },
-  { key: 'GEAR',     name: 'Royal Amethyst',        pay: '1.6x',  desc: 'Glowing purple crystal shard.' },
-  { key: 'SPRING',   name: 'Silver Hourglass',      pay: '0.75x', desc: 'Platinum & ice-blue sands of time.' },
-  { key: 'NUT',      name: 'Coral Elixir',          pay: '0.35x', desc: 'Luminous orange-pink potion vial.' },
-  { key: 'KEY',      name: 'Golden Key (SCATTER)',  pay: 'BONUS', desc: 'Land 3 or more Golden Keys anywhere on the 4 pointers (XII, III, VI, IX) to trigger 8 Free Spins!' }
+  { key: 'SAPPHIRE', name: 'Electric Diamond',      pay: '3.2x',  desc: 'Bright ice-cyan faceted diamond.' },
+  { key: 'GEAR',     name: 'Neon Magenta',          pay: '1.6x',  desc: 'Luminous pink-magenta crystal shard.' },
+  { key: 'SPRING',   name: 'Amber Hourglass',       pay: '0.75x', desc: 'Platinum frame with glowing golden sands.' },
+  { key: 'NUT',      name: 'Coral Elixir',          pay: '0.35x', desc: 'Bright tangerine potion vial.' },
+  { key: 'KEY',      name: 'Golden Key (SCATTER)',  pay: 'BONUS', desc: 'Land 3 or more Golden Keys anywhere inside the 4 highlighted pointer corridors (XII, III, VI, IX) to trigger 8 Free Spins!' }
 ];
 
 // 36-stop virtual rings (verified 96.34% RTP)
@@ -78,8 +78,7 @@ const state = {
   spaceHoldAuto: false
 };
 
-// Multi-colored Floating Magic Sparks
-const sparkColors = ['rgba(255,224,130,', 'rgba(167,139,250,', 'rgba(52,211,153,', 'rgba(96,165,250,'];
+const sparkColors = ['rgba(255,224,130,', 'rgba(244,114,182,', 'rgba(52,211,153,', 'rgba(56,189,248,'];
 const particles = Array.from({ length: 46 }, () => ({
   x: Math.random() * 640,
   y: Math.random() * 640,
@@ -92,7 +91,7 @@ const particles = Array.from({ length: 46 }, () => ({
 
 let celebrationCoins = [];
 
-// Hybrid Audio Engine (Ready for frontend/sounds/*.mp3)
+// Hybrid Audio Engine (Plays frontend/sounds/*.mp3 when uploaded)
 const SoundFX = {
   ctx: null,
   mp3Ready: {},
@@ -220,12 +219,12 @@ function updateUI(roundWin = null) {
 }
 
 // ============================================================================
-// DISTINCT MULTI-COLORED 3D SYMBOLS (ZERO COLOR CONFUSION!)
+// HIGH-CONTRAST 3D JEWEL & ALCHEMY ICON RENDERER (POPS ON DARK VELVET!)
 // ============================================================================
 function draw3DFacetedJewel(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
   c.save();
   c.shadowColor = cMid;
-  c.shadowBlur = 10;
+  c.shadowBlur = 12;
 
   c.beginPath();
   for (let i = 0; i < sides; i++) {
@@ -237,22 +236,23 @@ function draw3DFacetedJewel(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
   }
   c.closePath();
 
-  const grad = c.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.08, 0, 0, r * 1.1);
+  const grad = c.createRadialGradient(-r * 0.32, -r * 0.36, r * 0.05, 0, 0, r * 1.08);
   grad.addColorStop(0, '#ffffff');
-  grad.addColorStop(0.28, cTop);
-  grad.addColorStop(0.68, cMid);
+  grad.addColorStop(0.26, cTop);
+  grad.addColorStop(0.66, cMid);
   grad.addColorStop(1, cDeep);
   c.fillStyle = grad;
   c.fill();
 
   c.shadowBlur = 0;
-  c.lineWidth = 1.6;
+  c.lineWidth = 2;
   c.strokeStyle = cRim;
   c.stroke();
 
+  // 3D Crown Facet Lines
   const innerR = r * 0.52;
-  c.strokeStyle = 'rgba(255,255,255,0.4)';
-  c.lineWidth = 0.9;
+  c.strokeStyle = 'rgba(255,255,255,0.55)';
+  c.lineWidth = 1;
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
     c.beginPath();
@@ -261,6 +261,7 @@ function draw3DFacetedJewel(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
     c.stroke();
   }
 
+  // Elevated Inner Table
   c.beginPath();
   for (let i = 0; i < sides; i++) {
     const a = (i * Math.PI * 2) / sides - Math.PI / 2;
@@ -270,12 +271,13 @@ function draw3DFacetedJewel(c, r, cTop, cMid, cDeep, cRim, sides = 8) {
     else c.lineTo(x, y);
   }
   c.closePath();
-  c.fillStyle = 'rgba(255,255,255,0.34)';
+  c.fillStyle = 'rgba(255,255,255,0.38)';
   c.fill();
 
+  // Sharp Specular Star Highlight
   c.fillStyle = '#ffffff';
   c.beginPath();
-  c.arc(-r * 0.28, -r * 0.3, r * 0.13, 0, Math.PI * 2);
+  c.arc(-r * 0.28, -r * 0.3, r * 0.14, 0, Math.PI * 2);
   c.fill();
   c.restore();
 }
@@ -284,13 +286,13 @@ function drawSymbolIcon(c, type, r) {
   c.save();
   switch (type) {
     case 'WILD': {
-      // 8-Point Astral Sun Star (Cyan & Pure White)
-      c.shadowColor = '#22d3ee';
+      // Radiant White & Gold-Cyan Astral Sunburst Star
+      c.shadowColor = '#00f5d4';
       c.shadowBlur = 16;
       const spikes = 8;
       c.beginPath();
       for (let i = 0; i < spikes * 2; i++) {
-        const rad = i % 2 === 0 ? r * 0.96 : r * 0.44;
+        const rad = i % 2 === 0 ? r * 0.98 : r * 0.45;
         const a = (i * Math.PI) / spikes;
         const x = Math.cos(a) * rad;
         const y = Math.sin(a) * rad;
@@ -300,13 +302,13 @@ function drawSymbolIcon(c, type, r) {
       c.closePath();
       const sGrad = c.createRadialGradient(0, 0, 1, 0, 0, r);
       sGrad.addColorStop(0, '#ffffff');
-      sGrad.addColorStop(0.5, '#22d3ee');
-      sGrad.addColorStop(1, '#0284c7');
+      sGrad.addColorStop(0.55, '#5eead4');
+      sGrad.addColorStop(1, '#0891b2');
       c.fillStyle = sGrad;
       c.fill();
       c.shadowBlur = 0;
-      c.lineWidth = 1.5;
-      c.strokeStyle = '#ecfeff';
+      c.lineWidth = 1.8;
+      c.strokeStyle = '#ffffff';
       c.stroke();
 
       c.beginPath();
@@ -316,30 +318,29 @@ function drawSymbolIcon(c, type, r) {
       break;
     }
     case 'RUBY':
-      // Fiery Crimson Ruby (Octagon)
-      draw3DFacetedJewel(c, r * 0.92, '#ff8fa3', '#f43f5e', '#881337', '#fecdd3', 8);
+      // Ultra-Bright Crimson Ruby
+      draw3DFacetedJewel(c, r * 0.92, '#ffb3c1', '#ff1e56', '#7f0926', '#ffe5ec', 8);
       break;
 
     case 'EMERALD':
-      // Neon Forest Emerald (Hexagon)
-      draw3DFacetedJewel(c, r * 0.9, '#6ee7b7', '#10b981', '#064e3b', '#a7f3d0', 6);
+      // Vivid Neon Forest Emerald
+      draw3DFacetedJewel(c, r * 0.9, '#a7f3d0', '#00e676', '#044726', '#d1fae5', 6);
       break;
 
     case 'SAPPHIRE':
-      // Electric Royal Blue Sapphire (Diamond)
-      draw3DFacetedJewel(c, r * 0.94, '#93c5fd', '#2563eb', '#1e1b4b', '#dbeafe', 4);
+      // High-Contrast Ice Cyan Diamond (Never blends with dark blue!)
+      draw3DFacetedJewel(c, r * 0.95, '#e0f2fe', '#00d4ff', '#0369a1', '#ffffff', 4);
       break;
 
     case 'GEAR':
-      // Royal Amethyst Purple Crystal (Triangle / Shard) — NO MORE YELLOW!
-      draw3DFacetedJewel(c, r * 0.95, '#e9d5ff', '#9333ea', '#3b0764', '#f3e8ff', 5);
+      // Vibrant Neon Magenta / Hot Pink Crystal (Never blends with purple!)
+      draw3DFacetedJewel(c, r * 0.95, '#fbcfe8', '#f43f8e', '#701a45', '#fdf2f8', 5);
       break;
 
     case 'SPRING': {
-      // Platinum & Ice-Blue 3D Hourglass — NO MORE COIL!
-      c.shadowColor = '#38bdf8';
-      c.shadowBlur = 8;
-      // Top & Bottom Glass Bulbs
+      // Bright White Platinum Frame + Glowing Golden Amber Sand Hourglass
+      c.shadowColor = '#fbbf24';
+      c.shadowBlur = 10;
       c.beginPath();
       c.moveTo(-r * 0.56, -r * 0.68);
       c.lineTo(r * 0.56, -r * 0.68);
@@ -349,76 +350,74 @@ function drawSymbolIcon(c, type, r) {
       c.lineTo(0, 0);
       c.closePath();
       const glassGrad = c.createLinearGradient(-r * 0.5, 0, r * 0.5, 0);
-      glassGrad.addColorStop(0, '#bae6fd');
-      glassGrad.addColorStop(0.5, '#e0f2fe');
-      glassGrad.addColorStop(1, '#38bdf8');
+      glassGrad.addColorStop(0, '#f8fafc');
+      glassGrad.addColorStop(0.5, '#ffffff');
+      glassGrad.addColorStop(1, '#cbd5e1');
       c.fillStyle = glassGrad;
       c.fill();
       c.shadowBlur = 0;
-      c.lineWidth = 1.6;
-      c.strokeStyle = '#f8fafc';
+      c.lineWidth = 1.8;
+      c.strokeStyle = '#ffffff';
       c.stroke();
 
-      // Glowing Cyan Sand in bottom bulb
+      // Bright Golden-Amber Sand in bottom bulb
       c.beginPath();
-      c.moveTo(-r * 0.36, r * 0.62);
-      c.lineTo(r * 0.36, r * 0.62);
-      c.lineTo(0, r * 0.22);
+      c.moveTo(-r * 0.38, r * 0.62);
+      c.lineTo(r * 0.38, r * 0.62);
+      c.lineTo(0, r * 0.18);
       c.closePath();
-      c.fillStyle = '#0ea5e9';
+      c.fillStyle = '#f59e0b';
       c.fill();
 
-      // Silver Caps
-      c.fillStyle = '#cbd5e1';
-      c.fillRect(-r * 0.65, -r * 0.8, r * 1.3, r * 0.16);
-      c.fillRect(-r * 0.65, r * 0.64, r * 1.3, r * 0.16);
+      // White Silver Caps
+      c.fillStyle = '#f1f5f9';
+      c.fillRect(-r * 0.66, -r * 0.82, r * 1.32, r * 0.17);
+      c.fillRect(-r * 0.66, r * 0.65, r * 1.32, r * 0.17);
       break;
     }
 
     case 'NUT':
     default: {
-      // Luminous Coral-Orange Alchemist Potion Flask — NO MORE YELLOW NUT!
-      c.shadowColor = '#fb7185';
-      c.shadowBlur = 9;
-      // Round Potion Bulb
-      const flaskGrad = c.createRadialGradient(-r * 0.25, -r * 0.1, 2, 0, r * 0.15, r * 0.72);
-      flaskGrad.addColorStop(0, '#ffedd5');
-      flaskGrad.addColorStop(0.45, '#fb923c');
-      flaskGrad.addColorStop(1, '#c2410c');
+      // Bright Tangerine-Coral Potion Vial with White Rim
+      c.shadowColor = '#fb923c';
+      c.shadowBlur = 10;
+      const flaskGrad = c.createRadialGradient(-r * 0.25, -r * 0.05, 2, 0, r * 0.16, r * 0.72);
+      flaskGrad.addColorStop(0, '#ffffff');
+      flaskGrad.addColorStop(0.35, '#fdba74');
+      flaskGrad.addColorStop(0.75, '#f97316');
+      flaskGrad.addColorStop(1, '#9a3412');
       c.beginPath();
-      c.arc(0, r * 0.16, r * 0.66, 0, Math.PI * 2);
+      c.arc(0, r * 0.16, r * 0.67, 0, Math.PI * 2);
       c.fillStyle = flaskGrad;
       c.fill();
       c.shadowBlur = 0;
-      c.lineWidth = 1.6;
-      c.strokeStyle = '#fed7aa';
+      c.lineWidth = 1.8;
+      c.strokeStyle = '#ffedd5';
       c.stroke();
 
-      // Glass Neck & Cork
-      c.fillStyle = '#e2e8f0';
+      c.fillStyle = '#f8fafc';
       c.fillRect(-r * 0.2, -r * 0.64, r * 0.4, r * 0.24);
-      c.fillStyle = '#a16207';
+      c.fillStyle = '#eab308';
       c.fillRect(-r * 0.16, -r * 0.82, r * 0.32, r * 0.2);
 
-      // Specular Bubble Highlight
       c.fillStyle = '#ffffff';
       c.beginPath();
-      c.arc(-r * 0.24, r * 0.02, r * 0.13, 0, Math.PI * 2);
+      c.arc(-r * 0.24, r * 0.02, r * 0.14, 0, Math.PI * 2);
       c.fill();
       break;
     }
 
     case 'KEY': {
-      // Pure Gold & Ruby Scatter Key (Stands out immediately as the ONLY Gold icon!)
+      // Pure Gold & Ruby Scatter Key
       c.shadowColor = '#fde047';
-      c.shadowBlur = 14;
+      c.shadowBlur = 15;
       const kGrad = c.createLinearGradient(-r, -r, r, r);
-      kGrad.addColorStop(0, '#fef9c3');
-      kGrad.addColorStop(0.45, '#facc15');
-      kGrad.addColorStop(1, '#a16207');
+      kGrad.addColorStop(0, '#ffffff');
+      kGrad.addColorStop(0.4, '#fde047');
+      kGrad.addColorStop(1, '#b45309');
       c.fillStyle = kGrad;
-      c.strokeStyle = '#422006';
-      c.lineWidth = 1.6;
+      c.strokeStyle = '#fef9c3';
+      c.lineWidth = 1.5;
 
       c.beginPath();
       c.arc(0, -r * 0.36, r * 0.4, 0, Math.PI * 2);
@@ -433,7 +432,6 @@ function drawSymbolIcon(c, type, r) {
 
       c.fillStyle = kGrad;
       c.fillRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.8);
-      c.strokeRect(-r * 0.11, -r * 0.02, r * 0.22, r * 0.8);
       c.fillRect(r * 0.09, r * 0.34, r * 0.3, r * 0.15);
       c.fillRect(r * 0.09, r * 0.56, r * 0.34, r * 0.15);
       break;
@@ -493,10 +491,10 @@ function renderRulesModal() {
   symCardsHtml += '</div>';
 
   document.getElementById('rules-content').innerHTML = `
-    <h3>1. HOW TO WIN (THE 4 GOLDEN POINTERS)</h3>
-    <p>Align <b>3 matching symbols</b> from Outer to Inner ring along any of the 4 illuminated Roman Numeral pointers (<b>XII, III, VI, IX</b>). Matched gems dissolve, the right-side <b>Alchemy Multiplier</b> climbs (1x → 100x), and the rings shift clockwise (Outer +1, Middle +2, Inner +3) for consecutive wins!</p>
+    <h3>1. HOW TO WIN (THE 4 GOLDEN CORRIDORS)</h3>
+    <p>Watch the <b>4 bright golden alignment corridors</b> at <b>XII (12), III (3), VI (6), and IX (9) o'clock</b>. Align <b>3 matching symbols</b> across the Outer, Middle, and Inner rings inside any corridor to win! Matched symbols vanish, the <b>Alchemy Multiplier</b> climbs (1x → 100x), and the rings shift clockwise (Outer +1, Middle +2, Inner +3) for chain wins.</p>
     <h3>2. SCATTER &amp; GRAND COMPLICATION FREE SPINS</h3>
-    <p>Landing <b>3 or more Golden Time Keys</b> anywhere inside the 4 pointer tracks (XII, III, VI, IX) awards <b>8 Free Spins</b> (+3 extra spins on retrigger) where the Alchemy Multiplier <b>never resets</b>!</p>
+    <p>Landing <b>3 or more Golden Time Keys</b> anywhere inside the 4 golden corridors (XII, III, VI, IX) awards <b>8 Free Spins</b> (+3 extra spins on retrigger) where the Alchemy Multiplier <b>never resets</b>!</p>
     <h3>3. SYMBOL GUIDE &amp; PAYOUTS (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
     ${symCardsHtml}
     <p style="margin-top:8px">Theoretical RTP: <b>96.34%</b> | Max Win Cap: <b>5,000x</b>.</p>
@@ -758,7 +756,7 @@ async function handleSpin(isBonusBuy = false) {
 }
 
 // ============================================================================
-// 3D ROYAL INDIGO & GOLD CLOCKWORK RENDERER
+// OBSIDIAN VELVET RINGS + HIGH-VISIBILITY 4 GOLDEN CORRIDORS RENDERER
 // ============================================================================
 function drawGearTeeth(c, radius, toothCount, toothDepth, fillStyle) {
   c.beginPath();
@@ -785,7 +783,7 @@ function renderLoop() {
   state.coreAngle += state.isSpinning ? 0.06 : 0.01;
   ctx.clearRect(0, 0, w, h);
 
-  // 1. Vibrant Prismatic Sunburst & Floating Multi-Color Sparks
+  // 1. Ambient Sunburst & Floating Sparks
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(state.coreAngle * 0.12);
@@ -829,7 +827,7 @@ function renderLoop() {
 
   ctx.beginPath();
   ctx.arc(cx, cy, 274, 0, Math.PI * 2);
-  ctx.fillStyle = '#120d26';
+  ctx.fillStyle = '#090712';
   ctx.fill();
   ctx.lineWidth = 2.5;
   ctx.strokeStyle = '#ffe89e';
@@ -847,11 +845,11 @@ function renderLoop() {
   }
   ctx.restore();
 
-  // 3. 3D Deep Indigo & Velvet Gears (Makes Bright Gems & Gold Key Pop!)
+  // 3. Deep Obsidian Velvet Gears (High contrast so EVERY bright gem pops!)
   const rings = [
-    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#2a2154', cBot: '#120d29', stroke: '#eab308' },
-    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#211945', cBot: '#0e0a21', stroke: '#ca8a04' },
-    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#191236', cBot: '#090617', stroke: '#a16207' }
+    { data: getVisibleRing(RING_OUTER, state.posOut), radius: 230, slotR: 25, rot: state.rotOut, teeth: 48, cTop: '#181426', cBot: '#090712', stroke: '#eab308' },
+    { data: getVisibleRing(RING_MIDDLE, state.posMid), radius: 162, slotR: 23, rot: state.rotMid, teeth: 36, cTop: '#141021', cBot: '#07050d', stroke: '#ca8a04' },
+    { data: getVisibleRing(RING_INNER, state.posIn), radius: 98, slotR: 21, rot: state.rotIn, teeth: 24, cTop: '#100d1a', cBot: '#05040a', stroke: '#a16207' }
   ];
 
   rings.forEach(ring => {
@@ -859,7 +857,7 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(ring.rot);
 
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
     ctx.shadowBlur = 14;
     ctx.shadowOffsetY = 6;
     drawGearTeeth(ctx, ring.radius + ring.slotR + 2, ring.teeth, 6, ring.stroke);
@@ -884,24 +882,25 @@ function renderLoop() {
       const symKey = ring.data[k];
       const isPointerSlot = POINTER_OFFSETS.includes(k);
 
+      // Pitch-black recessed socket with bright metallic rim
       ctx.beginPath();
       ctx.arc(sx, sy, ring.slotR, 0, Math.PI * 2);
-      ctx.fillStyle = isPointerSlot ? '#1d163b' : '#090617';
+      ctx.fillStyle = '#040308';
       ctx.fill();
-      ctx.lineWidth = isPointerSlot ? 2.4 : 1.4;
-      ctx.strokeStyle = isPointerSlot ? '#ffe89e' : '#4c3d82';
+      ctx.lineWidth = isPointerSlot ? 2.5 : 1.5;
+      ctx.strokeStyle = isPointerSlot ? '#fde047' : '#64748b';
       ctx.stroke();
 
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(-ring.rot);
-      drawSymbolIcon(ctx, symKey, ring.slotR * 0.88);
+      drawSymbolIcon(ctx, symKey, ring.slotR * 0.9);
       ctx.restore();
     }
     ctx.restore();
   });
 
-  // 4. Illuminated 4-Pointer Alignment Tracks
+  // 4. HIGH-VISIBILITY 4 GOLDEN ALIGNMENT CORRIDORS (XII, III, VI, IX)
   POINTER_OFFSETS.forEach(p => {
     const angle = -Math.PI / 2 + (p * Math.PI * 2) / 12;
     const isHit = state.winningPointers.includes(p);
@@ -910,27 +909,55 @@ function renderLoop() {
     ctx.translate(cx, cy);
     ctx.rotate(angle);
 
-    ctx.fillStyle = isHit ? 'rgba(24, 255, 130, 0.28)' : 'rgba(255, 232, 158, 0.07)';
-    ctx.fillRect(54, -27, 212, 54);
-    ctx.strokeStyle = isHit ? '#18ff82' : 'rgba(255, 232, 158, 0.4)';
-    ctx.lineWidth = isHit ? 3 : 1.3;
-    ctx.strokeRect(54, -27, 212, 54);
+    // Bright Golden Corridor Frame with Glowing Edge
+    ctx.shadowColor = isHit ? '#18ff82' : '#fbbf24';
+    ctx.shadowBlur = isHit ? 22 : 12;
 
+    const corridorGrad = ctx.createLinearGradient(54, 0, 266, 0);
+    if (isHit) {
+      corridorGrad.addColorStop(0, 'rgba(24, 255, 130, 0.22)');
+      corridorGrad.addColorStop(0.5, 'rgba(24, 255, 130, 0.38)');
+      corridorGrad.addColorStop(1, 'rgba(24, 255, 130, 0.22)');
+    } else {
+      corridorGrad.addColorStop(0, 'rgba(253, 224, 71, 0.10)');
+      corridorGrad.addColorStop(0.5, 'rgba(253, 224, 71, 0.20)');
+      corridorGrad.addColorStop(1, 'rgba(253, 224, 71, 0.14)');
+    }
+
+    ctx.fillStyle = corridorGrad;
+    ctx.beginPath();
+    ctx.roundRect(54, -29, 212, 58, 10);
+    ctx.fill();
+
+    ctx.lineWidth = isHit ? 3.5 : 2.5;
+    ctx.strokeStyle = isHit ? '#18ff82' : '#fde047';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Gold Corner Rivets on Corridor Box
+    ctx.fillStyle = isHit ? '#ffffff' : '#fef08a';
+    [[60, -23], [260, -23], [60, 23], [260, 23]].forEach(([rx, ry]) => {
+      ctx.beginPath();
+      ctx.arc(rx, ry, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Ornate 3D Gold Pointer Needle
     ctx.beginPath();
     ctx.moveTo(256, 0);
-    ctx.lineTo(300, -15);
-    ctx.lineTo(291, 0);
-    ctx.lineTo(300, 15);
+    ctx.lineTo(302, -16);
+    ctx.lineTo(292, 0);
+    ctx.lineTo(302, 16);
     ctx.closePath();
-    ctx.fillStyle = isHit ? '#18ff82' : '#ffe89e';
+    ctx.fillStyle = isHit ? '#18ff82' : '#fde047';
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#3b2406';
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(283, 0, 4.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#f43f5e';
+    ctx.arc(284, 0, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff1e56';
     ctx.fill();
 
     ctx.restore();
@@ -941,10 +968,10 @@ function renderLoop() {
   ctx.translate(cx, cy);
   ctx.beginPath();
   ctx.arc(0, 0, 50, 0, Math.PI * 2);
-  ctx.fillStyle = '#120c29';
+  ctx.fillStyle = '#090712';
   ctx.fill();
   ctx.lineWidth = 4;
-  ctx.strokeStyle = '#ffe89e';
+  ctx.strokeStyle = '#fde047';
   ctx.stroke();
 
   ctx.rotate(state.coreAngle);
