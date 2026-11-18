@@ -3,77 +3,99 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Aether Dial | 3D Royal Alchemy</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+  <title>Aether Dial</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="ico-spin" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="ico-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor"/></symbol>
+      <symbol id="ico-auto" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.66-5.66L20 8.5M20 12a8 8 0 0 1-13.66 5.66L4 15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M20 4v4.5h-4.5M4 20v-4.5h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 9.2v5.6l4.6-2.8z" fill="currentColor"/></symbol>
+      <symbol id="ico-turbo" viewBox="0 0 24 24"><path d="M13.5 2.5 5 13.5h6l-1 8 8.5-11h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+      <symbol id="ico-minus" viewBox="0 0 24 24"><path d="M6 12h12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+      <symbol id="ico-plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+      <symbol id="ico-sound-on" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="ico-sound-off" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="m16 9.5 5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="ico-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.4" fill="currentColor"/></symbol>
+      <symbol id="ico-history" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 4.5v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4.3l2.8 1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="ico-close" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11m0-11-11 11" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+      <symbol id="ico-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></symbol>
+    </defs>
+  </svg>
+
   <div id="game-wrapper">
-    <!-- Top Ornate Header -->
     <header id="top-bar">
       <div class="title-plate">
         <span class="gem-rivet ruby"></span>
         <h1>AETHER DIAL</h1>
         <span class="gem-rivet emerald"></span>
       </div>
-      <div id="status-banner">MATCH 3 SYMBOLS ON XII, III, VI OR IX POINTERS</div>
+      <div id="status-banner" aria-live="polite"></div>
       <div class="top-actions">
-        <button id="btn-replay" class="pill-btn" title="Pragmatic Style Round Replay">↺ REPLAY</button>
-        <button id="btn-sound" class="icon-btn" title="Sound">🔊</button>
-        <button id="btn-info" class="icon-btn" title="Paytable & Rules">i</button>
-        <button id="social-toggle" title="Switch Standard / Stake.us Social">STANDARD</button>
+        <button id="btn-replay" class="icon-btn" data-t-title="history"><svg><use href="#ico-history"/></svg></button>
+        <button id="btn-sound" class="icon-btn" data-t-title="sound"><svg><use href="#ico-sound-on"/></svg></button>
+        <button id="btn-info" class="icon-btn" data-t-title="info"><svg><use href="#ico-info"/></svg></button>
       </div>
     </header>
 
-    <!-- Replay Mode Watermark Banner -->
-    <div id="replay-ribbon" class="hidden">REPLAY MODE — CERTIFIED ROUND PLAYBACK</div>
+    <div id="replay-ribbon" class="hidden" data-t="replayRibbon"></div>
 
-    <!-- Main 3D Stage -->
     <main id="playfield">
-      <!-- Left Panel -->
       <aside id="left-panel">
         <div class="gauge-box">
-          <div class="gauge-label">FREE SPINS</div>
+          <div class="gauge-label" data-t="freeSpins"></div>
           <div id="fs-counter" class="gauge-value">0</div>
         </div>
 
         <button id="btn-bonus-buy" class="bonus-buy-3d">
           <span class="buy-shine"></span>
-          <span id="lbl-buy-title" class="buy-title">⚡ BUY FREE SPINS ⚡</span>
-          <span class="buy-sub">3+ SCATTER KEYS GUARANTEED</span>
-          <span id="val-buy-cost" class="buy-price">100.00</span>
+          <span class="buy-title" data-t="buyTitle"></span>
+          <span class="buy-sub" data-t="buySub"></span>
+          <span id="val-buy-cost" class="buy-price"></span>
         </button>
 
         <div class="paytable-visual">
-          <div class="pt-title">SYMBOL PAYOUTS (3-ALIGN)</div>
+          <div class="pt-title" data-t="paytableTitle"></div>
           <div id="visual-paytable-list"></div>
           <div class="pt-scatter-box">
             <canvas class="mini-sym" data-sym="KEY" width="30" height="30"></canvas>
             <div>
-              <strong>3+ GOLDEN KEYS = SCATTER</strong>
-              <span>8 Free Spins (+5 Retrigger!)</span>
+              <strong data-t="scatterTitle"></strong>
+              <span data-t="scatterSub"></span>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Center 3D Clockwork Canvas -->
       <section id="canvas-container">
         <canvas id="clockwork-canvas" width="640" height="640"></canvas>
 
-        <!-- 3D Extruded Big Win / Scatter Celebration Overlay -->
         <div id="big-win-banner" class="hidden">
           <div class="sunburst-bg"></div>
-          <div id="big-win-tier" class="text-3d-gold">BIG WIN!</div>
-          <div id="big-win-amount" class="text-3d-amount">0.00</div>
+          <div id="big-win-tier" class="text-3d-gold"></div>
+          <div id="big-win-amount" class="text-3d-amount"></div>
+        </div>
+
+        <!-- Stake Engine replay mode: start / play again / error panel -->
+        <div id="replay-panel" class="hidden">
+          <div class="rp-card">
+            <div class="rp-title" data-t="replayTitle"></div>
+            <dl class="rp-stats">
+              <div><dt data-t="replayMode"></dt><dd id="rp-mode">-</dd></div>
+              <div><dt data-t="replayBaseBet"></dt><dd id="rp-base">-</dd></div>
+              <div><dt data-t="replayCostMult"></dt><dd id="rp-cost">-</dd></div>
+              <div><dt data-t="replayRealCost"></dt><dd id="rp-real">-</dd></div>
+              <div id="rp-win-row" class="hidden"><dt data-t="replayWin"></dt><dd id="rp-win">-</dd></div>
+            </dl>
+            <div id="rp-error" class="rp-error hidden"></div>
+            <button id="btn-replay-start" class="rp-play"><svg><use href="#ico-play"/></svg><span id="rp-play-lbl"></span></button>
+          </div>
         </div>
       </section>
 
-      <!-- Right Panel: Glowing Alchemy Tube -->
       <aside id="right-panel">
-        <div class="tube-header">ALCHEMY</div>
+        <div class="tube-header" data-t="multiplier"></div>
         <div id="multiplier-tube">
           <div class="mult-step" data-idx="9">100x</div>
           <div class="mult-step" data-idx="8">50x</div>
@@ -89,126 +111,113 @@
       </aside>
     </main>
 
-    <!-- Bottom 3D Bevelled Control Deck -->
+    <!-- Control bar: balance | win | bet - + | autoplay  spin  turbo -->
     <footer id="control-deck">
-      <div class="deck-group">
-        <div class="meter-3d">
-          <span id="lbl-balance" class="meter-label">CREDIT</span>
-          <span id="val-balance" class="meter-num">1,000.00</span>
-        </div>
-        <div class="meter-3d">
-          <span id="lbl-bet" class="meter-label">BET</span>
-          <span id="val-bet" class="meter-num">1.00</span>
-        </div>
+      <div class="hud-stat">
+        <span class="hud-label" data-t="balance"></span>
+        <span id="val-balance" class="hud-value"></span>
+      </div>
+      <div class="hud-stat win">
+        <span class="hud-label" data-t="win"></span>
+        <span id="val-win" class="hud-value"></span>
       </div>
 
-      <div class="meter-3d win-center">
-        <span id="lbl-win" class="meter-label">TOTAL WIN</span>
-        <span id="val-win" class="meter-num highlight">0.00</span>
+      <div class="bet-stepper" id="bet-stepper">
+        <button id="btn-bet-down" class="step-btn" data-t-title="decrease"><svg><use href="#ico-minus"/></svg></button>
+        <div class="hud-stat bet">
+          <span class="hud-label" data-t="bet"></span>
+          <span id="val-bet" class="hud-value"></span>
+        </div>
+        <button id="btn-bet-up" class="step-btn" data-t-title="increase"><svg><use href="#ico-plus"/></svg></button>
       </div>
 
-      <div class="spin-cluster">
-        <button id="btn-bet-down" class="round-ctrl" title="Decrease Bet">−</button>
-
-        <button id="btn-spin" class="spin-medallion">
-          <span id="lbl-spin">⟳</span>
-          <small id="spin-sub-lbl">SPIN / HOLD SPACE</small>
+      <div class="action-group">
+        <button id="btn-autoplay" class="ctrl-btn" data-t-title="autoplay">
+          <svg><use href="#ico-auto"/></svg>
+          <span id="auto-count-badge" class="ctrl-badge hidden"></span>
         </button>
-
-        <button id="btn-bet-up" class="round-ctrl" title="Increase Bet">+</button>
-
-        <button id="btn-autoplay" class="auto-btn">
-          <span id="auto-lbl">AUTOPLAY</span>
-          <small id="auto-count-badge"></small>
-        </button>
-
-        <button id="btn-turbo" class="brass-btn">TURBO</button>
+        <button id="btn-spin" class="spin-btn" data-t-title="spin"><svg id="spin-icon"><use href="#ico-spin"/></svg></button>
+        <button id="btn-turbo" class="ctrl-btn" data-t-title="turbo"><svg><use href="#ico-turbo"/></svg></button>
       </div>
     </footer>
   </div>
 
-  <!-- Autoplay Modal -->
+  <!-- Autoplay: pick a count, then confirm -->
   <div id="autoplay-modal" class="modal-overlay hidden">
     <div class="modal-card">
-      <h2>AUTOPLAY SETTINGS</h2>
-      <p>Select automatic spin count (or hold SPACEBAR to auto-spin):</p>
+      <h2 data-t="autoTitle"></h2>
+      <p data-t="autoText"></p>
       <div class="auto-grid">
         <button class="auto-choice" data-spins="10">10</button>
-        <button class="auto-choice" data-spins="20">20</button>
+        <button class="auto-choice" data-spins="25">25</button>
         <button class="auto-choice" data-spins="50">50</button>
-        <button class="auto-choice" data-spins="70">70</button>
         <button class="auto-choice" data-spins="100">100</button>
+        <button class="auto-choice" data-spins="250">250</button>
         <button class="auto-choice" data-spins="500">500</button>
       </div>
       <div class="modal-actions">
-        <button id="btn-auto-cancel" class="brass-btn">CANCEL</button>
+        <button id="btn-auto-cancel" class="brass-btn" data-t="cancel"></button>
+        <button id="btn-auto-start" class="brass-btn confirm-green" data-t="autoStart" disabled></button>
       </div>
     </div>
   </div>
 
-  <!-- Bonus Buy Modal -->
+  <!-- Bonus mode confirmation -->
   <div id="buy-modal" class="modal-overlay hidden">
     <div class="modal-card">
-      <h2 id="modal-buy-heading">BUY FREE SPINS</h2>
-      <p>Guarantees <b>3+ Golden Time Keys (Scatter)</b> across the 4 pointers to launch <b>8 Aether Dial Free Spins</b> (+5 extra spins on retrigger) with persistent multipliers.</p>
+      <h2 data-t="buyHeading"></h2>
+      <p data-t="buyText"></p>
       <div class="modal-cost-box">
-        <span>TOTAL COST (100x): </span>
-        <strong id="modal-buy-cost-val">100.00</strong>
+        <span data-t="buyCostLabel"></span>
+        <strong id="modal-buy-cost-val"></strong>
       </div>
       <div class="modal-actions">
-        <button id="btn-buy-cancel" class="brass-btn">CANCEL</button>
-        <button id="btn-buy-confirm" class="brass-btn confirm-green">START BONUS</button>
+        <button id="btn-buy-cancel" class="brass-btn" data-t="cancel"></button>
+        <button id="btn-buy-confirm" class="brass-btn confirm-green" data-t="buyConfirm"></button>
       </div>
     </div>
   </div>
 
-  <!-- Visual Rules & Scatter Guide Modal -->
+  <!-- Rules, paytable, UI guide, disclaimer -->
   <div id="info-modal" class="modal-overlay hidden">
     <div class="modal-card wide">
       <div class="modal-header">
-        <h2>AETHER DIAL — SYMBOL &amp; SCATTER GUIDE</h2>
-        <button id="btn-info-close" class="icon-btn">✕</button>
+        <h2 data-t="rulesTitle"></h2>
+        <button id="btn-info-close" class="icon-btn" data-t-title="close"><svg><use href="#ico-close"/></svg></button>
       </div>
       <div id="rules-content" class="rules-body"></div>
     </div>
   </div>
 
-  <!-- Pragmatic-Style Compact Square/Framed Replay Overlay -->
+  <!-- Session history replay -->
   <div id="replay-modal" class="modal-overlay hidden">
-    <div class="pragmatic-replay-box">
-      <!-- Top Bar -->
-      <div class="pr-header">
-        <div class="pr-title-wrap">
-          <span class="pr-dot"></span>
-          <span>AETHER DIAL — REPLAY</span>
+    <div class="history-box">
+      <div class="hb-header">
+        <div class="hb-title-wrap">
+          <span class="hb-dot"></span>
+          <span data-t="historyTitle"></span>
         </div>
-        <select id="replay-round-select" class="pr-select"></select>
-        <button id="btn-replay-close" class="pr-close-btn" title="Close Replay">✕</button>
+        <select id="replay-round-select" class="hb-select"></select>
+        <button id="btn-replay-close" class="hb-close-btn" data-t-title="close"><svg><use href="#ico-close"/></svg></button>
       </div>
 
-      <!-- Center: Live Mirror of Actual Gameplay Screen -->
-      <div class="pr-viewport">
+      <div class="hb-viewport">
         <canvas id="replay-canvas" width="540" height="540"></canvas>
-
-        <!-- Floating HUD Badges matching live game -->
-        <div id="pr-hud-fs" class="pr-hud-pill top-left">FREE SPINS: 0</div>
-        <div id="pr-hud-mult" class="pr-hud-pill top-right">MULT: 1x</div>
-        <div id="pr-hud-status" class="pr-hud-banner">SPIN 1 / 1</div>
-
-        <!-- Win / Scatter Celebration Overlay inside Replay -->
-        <div id="pr-celebration" class="pr-celeb hidden">
-          <div id="pr-celeb-title" class="pr-celeb-t">SCATTER!</div>
-          <div id="pr-celeb-val" class="pr-celeb-v">+8 FREE SPINS</div>
+        <div id="hist-fs" class="hb-hud-pill top-left"></div>
+        <div id="hist-mult" class="hb-hud-pill top-right"></div>
+        <div id="hist-status" class="hb-hud-banner"></div>
+        <div id="hist-celebration" class="hb-celeb hidden">
+          <div id="hist-celeb-title" class="hb-celeb-t"></div>
+          <div id="hist-celeb-val" class="hb-celeb-v"></div>
         </div>
       </div>
 
-      <!-- Bottom Pragmatic Control & Win Bar -->
-      <div class="pr-footer">
-        <div class="pr-stat"><span>MODE</span><strong id="rep-mode">BASE</strong></div>
-        <div class="pr-stat"><span>BET</span><strong id="rep-bet">1.00</strong></div>
-        <div class="pr-stat"><span>SPIN</span><strong id="pr-step-txt">1 / 1</strong></div>
-        <div class="pr-stat win"><span>TOTAL WIN</span><strong id="rep-total-win">0.00</strong></div>
-        <button id="btn-replay-restart" class="pr-btn-watch">↻ WATCH AGAIN</button>
+      <div class="hb-footer">
+        <div class="hb-stat"><span data-t="replayMode"></span><strong id="rep-mode"></strong></div>
+        <div class="hb-stat"><span data-t="bet"></span><strong id="rep-bet"></strong></div>
+        <div class="hb-stat"><span data-t="spinWord"></span><strong id="hist-step"></strong></div>
+        <div class="hb-stat win"><span data-t="totalWin"></span><strong id="rep-total-win"></strong></div>
+        <button id="btn-replay-restart" class="hb-btn-watch" data-t="watchAgain"></button>
       </div>
     </div>
   </div>

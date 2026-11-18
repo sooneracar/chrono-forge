@@ -22,3 +22,7 @@
   `books_bonus.jsonl` is not in the repo yet. The bonus line in
   `rtp_certification_report.json` (25.56%) is stale and does not match the CSV.
 - `math/generate_lookup.py` is an **old** math version and is not what is published on Stake.
+- Social mode (`social=true`) uses the restricted-phrase replacements from the
+  Stake Engine docs (`docs/reference/social-mode`); texts live in `TEXT` in `game.js`.
+- Fonts are bundled in `frontend/fonts` (Orbitron, SIL OFL); the build loads no external resources.
+- Nothing is logged to the console unless `?debug=true`.

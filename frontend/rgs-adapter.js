@@ -22,6 +22,8 @@
   const BOOK_PAYOUT_MULTIPLIER = 100;
 
   const params = new URLSearchParams(window.location.search);
+  // Nothing is written to the console unless ?debug=true (approval requirement).
+  const debug = (...args) => { if (params.get('debug') === 'true') console.log('[Aether Dial RGS]', ...args); };
 
   // ---------------------------------------------------------------------------
   // Currency display (from RGS.md "Supported Currencies")
@@ -161,7 +163,7 @@
     });
 
     if (spins.length === 0 || spins.every(s => s.cascades.length === 0)) {
-      console.error('[Aether Dial] Unrecognised book format. First events:', events.slice(0, 3));
+      debug('Unrecognised book format. First events:', events.slice(0, 3));
       throw new Error('UNKNOWN_BOOK_FORMAT');
     }
 
@@ -170,7 +172,7 @@
 
     const eventSum = rawWinSum * scale;
     if (payoutMult > 0 && Math.abs(eventSum - payoutMult) > 0.011 * Math.max(1, payoutMult)) {
-      console.warn('[Aether Dial] Event wins do not add up to the RGS payout', { eventSum, payoutMult });
+      debug('Event wins do not add up to the RGS payout', { eventSum, payoutMult });
     }
 
     return {
@@ -378,7 +380,7 @@
         LiveRGS.sessionID = this.sessionID;
         this.backend = LiveRGS;
       } else {
-        console.info('[Aether Dial] No sessionID/rgs_url — running local demo RGS.');
+        debug('No sessionID/rgs_url — running local demo RGS.');
       }
     },
 
