@@ -53,13 +53,20 @@ const RING_INNER = [
 const MULTIPLIERS = [1, 2, 3, 5, 8, 12, 20, 35, 50, 100];
 const POINTER_OFFSETS = [0, 3, 6, 9];
 const ROMAN_NUMERALS = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
-const BET_LEVELS = [0.20, 0.50, 1.00, 2.00, 5.00, 10.00, 25.00, 50.00];
-const MAX_WIN_MULT = 5000.0;
+// Display-only cost of the bonus mode; the real debit is done by the RGS.
 const BONUS_BUY_MULT = 100;
+// RGS bet mode names (must match the "name" fields in the math index.json).
+const MODE_BASE = 'BASE';
+const MODE_BONUS = 'BONUS';
 
 const state = {
-  balance: 1000.00,
-  betIdx: 2,
+  // money values are RGS integer units (1,000,000 = 1.00)
+  balance: 0,
+  currency: 'USD',
+  betLevels: [],
+  betIdx: 0,
+  jurisdiction: {},
+  replayMode: false,
   posOut: 0,
   posMid: 4,
   posIn: 8,
@@ -190,7 +197,11 @@ const bigWinBanner = document.getElementById('big-win-banner');
 const gameWrapper = document.getElementById('game-wrapper');
 
 function getBet() {
-  return BET_LEVELS[state.betIdx];
+  return state.betLevels[state.betIdx] || 0;
+}
+
+function money(units) {
+  return window.StakeRGS.formatMoney(units, state.currency);
 }
 
 function isAutoActive() {
@@ -203,13 +214,13 @@ function stopAllAutoplay() {
   updateUI();
 }
 
-function updateUI(roundWin = null) {
+function updateUI(roundWinUnits = null) {
   const bet = getBet();
-  valBalance.textContent = state.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  valBet.textContent = bet.toFixed(2);
-  if (roundWin !== null) valWin.textContent = roundWin.toFixed(2);
+  valBalance.textContent = money(state.balance);
+  valBet.textContent = money(bet);
+  if (roundWinUnits !== null) valWin.textContent = money(roundWinUnits);
   fsCounter.textContent = state.freeSpins;
-  document.getElementById('val-buy-cost').textContent = (bet * BONUS_BUY_MULT).toFixed(2);
+  document.getElementById('val-buy-cost').textContent = money(bet * BONUS_BUY_MULT);
 
   if (state.freeSpins > 0) {
     gameWrapper.style.borderColor = '#18ff82';
@@ -240,7 +251,13 @@ function updateUI(roundWin = null) {
     autoBadge.textContent = '';
   }
 
-  btnBonusBuy.disabled = state.isSpinning || state.freeSpins > 0 || isAutoActive();
+  const j = state.jurisdiction || {};
+  btnBonusBuy.disabled = state.isSpinning || state.freeSpins > 0 || isAutoActive() || state.replayMode || j.disabledBuyFeature === true;
+  btnBonusBuy.classList.toggle('hidden', j.disabledBuyFeature === true);
+  btnAutoplay.classList.toggle('hidden', j.disabledAutoplay === true || state.replayMode);
+  document.getElementById('btn-turbo').classList.toggle('hidden', j.disabledTurbo === true);
+  document.getElementById('btn-bet-down').disabled = state.isSpinning || state.replayMode || state.betIdx <= 0;
+  document.getElementById('btn-bet-up').disabled = state.isSpinning || state.replayMode || state.betIdx >= state.betLevels.length - 1;
 }
 
 // ============================================================================
@@ -503,7 +520,7 @@ function renderRulesModal() {
     <p>Landing <b>3 or more Golden Time Keys</b> anywhere inside the 4 crystal pointer frames (XII, III, VI, IX) awards <b>8 Free Spins</b>! Landing <b>3 or more Golden Keys again during Free Spins extends the bonus by +5 EXTRA SPINS</b>. During Free Spins, the Alchemy Multiplier <b>never resets</b>!</p>
     <h3>3. SYMBOL GUIDE &amp; PAYOUTS (MULTIPLES OF ${wagerWord.toUpperCase()})</h3>
     ${symCardsHtml}
-    <p style="margin-top:8px">Theoretical RTP: <b>96.34%</b> | Max Win Cap: <b>5,000x</b>.</p>
+    <p style="margin-top:8px">Theoretical RTP: <b>96.36%</b> (base game) | <b>96.34%</b> (bonus feature) | Max Win Cap: <b>5,000x</b>.</p>
   `;
 
   document.querySelectorAll('canvas.modal-sym-icon').forEach(mc => {
@@ -612,7 +629,7 @@ async function showBigWinCelebration(amount, mult) {
 
   const steps = 32;
   for (let i = 1; i <= steps; i++) {
-    amtEl.textContent = ((amount * i) / steps).toFixed(2);
+    amtEl.textContent = money((amount * i) / steps);
     await sleep(38);
   }
   await sleep(1200);
@@ -651,28 +668,173 @@ function animateRotation(durationMs, dirOut, dirMid, dirIn) {
   });
 }
 
-function pickBonusTriggerPositions(L) {
-  while (true) {
-    const o = Math.floor(Math.random() * L);
-    const m = Math.floor(Math.random() * L);
-    const i = Math.floor(Math.random() * L);
-    const res = evaluatePointers(
-      getVisibleRing(RING_OUTER, o),
-      getVisibleRing(RING_MIDDLE, m),
-      getVisibleRing(RING_INNER, i)
-    );
-    if (res.keyCount >= 3) return { o, m, i };
+// ============================================================================
+// RGS ROUND PLAYBACK
+// The outcome of a round is decided by the RGS (/wallet/play -> round.state,
+// i.e. the book events). The client only animates what the book contains.
+// ============================================================================
+const RGS_ERROR_TEXT = {
+  ERR_IPB: 'INSUFFICIENT BALANCE',
+  ERR_IS: 'SESSION EXPIRED — PLEASE RELOAD',
+  ERR_ATE: 'SESSION EXPIRED — PLEASE RELOAD',
+  ERR_GLE: 'GAMBLING LIMIT REACHED',
+  ERR_LOC: 'NOT AVAILABLE IN YOUR LOCATION',
+  ERR_VAL: 'INVALID REQUEST',
+  ERR_BE: 'A ROUND IS ALREADY ACTIVE — PLEASE RELOAD',
+  ERR_MAINTENANCE: 'GAME UNDER MAINTENANCE',
+  DEMO_BOOKS_MISSING: 'DEMO DATA MISSING (frontend/demo)',
+  UNKNOWN_BOOK_FORMAT: 'UNEXPECTED ROUND DATA'
+};
+
+function showRgsError(err) {
+  const code = (err && (err.code || err.message)) || 'ERR_GEN';
+  console.error('[Aether Dial] RGS error', err);
+  statusBanner.textContent = RGS_ERROR_TEXT[code] || 'CONNECTION ERROR — PLEASE TRY AGAIN';
+  if (code === 'ERR_IPB' && state.socialMode) statusBanner.textContent = 'INSUFFICIENT COINS';
+  stopAllAutoplay();
+}
+
+function multIdxFor(multiplier, fallbackIdx) {
+  const i = MULTIPLIERS.indexOf(multiplier);
+  return i >= 0 ? i : fallbackIdx;
+}
+
+function setRingPositions(positions) {
+  state.posOut = positions[0];
+  state.posMid = positions[1];
+  state.posIn = positions[2];
+}
+
+function evaluateCurrentBoard() {
+  return evaluatePointers(
+    getVisibleRing(RING_OUTER, state.posOut),
+    getVisibleRing(RING_MIDDLE, state.posMid),
+    getVisibleRing(RING_INNER, state.posIn)
+  );
+}
+
+// Plays the spins of a normalized round on the main stage.
+async function playRoundOnStage(round, fromEvent = 0) {
+  const amount = round.amount;
+  let runningMult = 0;
+  state.freeSpins = 0;
+  state.multIdx = 0;
+
+  for (let s = 0; s < round.spins.length; s++) {
+    const spin = round.spins[s];
+    const next = round.spins[s + 1];
+
+    // Resume: spins fully before the stored event index were already shown.
+    if (next && next.eventIndex <= fromEvent) {
+      spin.cascades.forEach(c => { runningMult += c.winMult; });
+      state.freeSpins = spin.freeSpinsRemaining !== null ? spin.freeSpinsRemaining : state.freeSpins;
+      continue;
+    }
+
+    state.winningPointers = [];
+    state.scatterCoords = [];
+    if (spin.isFree) {
+      state.freeSpins = Math.max(0, state.freeSpins - 1);
+      statusBanner.textContent = `★ FREE SPINS (${state.freeSpins} LEFT) ★`;
+    } else {
+      state.multIdx = 0;
+    }
+    updateUI(Math.round(runningMult * amount));
+
+    for (let c = 0; c < spin.cascades.length; c++) {
+      const cas = spin.cascades[c];
+      state.winningPointers = [];
+      setRingPositions(cas.positions);
+      if (c === 0) {
+        await animateRotation(1150, Math.PI * 2, -Math.PI * 2, Math.PI * 2);
+      } else {
+        await animateRotation(520, Math.PI / 6, (Math.PI / 6) * 2, (Math.PI / 6) * 3);
+      }
+
+      const res = evaluateCurrentBoard();
+      if ((cas.winMult > 0) !== res.hasWin) {
+        console.warn('[Aether Dial] Ring strips disagree with the book at event', cas.eventIndex, { book: cas, client: res });
+      }
+
+      if (cas.multiplier) state.multIdx = multIdxFor(cas.multiplier, state.multIdx);
+      const activeMult = cas.multiplier || MULTIPLIERS[Math.min(state.multIdx, MULTIPLIERS.length - 1)];
+
+      if (c === 0 && spin.freeSpinsAwarded > 0) {
+        state.freeSpins = spin.freeSpinsRemaining !== null ? spin.freeSpinsRemaining : state.freeSpins + spin.freeSpinsAwarded;
+        statusBanner.textContent = spin.isFree
+          ? `★ +${spin.freeSpinsAwarded} EXTRA FREE SPINS ★`
+          : `★ ${spin.freeSpinsAwarded} FREE SPINS UNLOCKED! ★`;
+        updateUI(Math.round(runningMult * amount));
+        await showScatter3DCelebration(res.keyPositions, spin.freeSpinsAwarded, spin.isFree);
+      }
+
+      if (cas.winMult > 0) {
+        state.winningPointers = cas.matchedPointers || res.matchedPointers;
+        SoundFX.play('win', 1 + state.multIdx * 0.05, 0.85);
+        runningMult += cas.winMult;
+        const stepUnits = Math.round(cas.winMult * amount);
+        statusBanner.textContent = `ALIGNED! ×${activeMult} ALCHEMY  +${money(stepUnits)}`;
+        updateUI(Math.round(runningMult * amount));
+        await sleep(700);
+        if (!cas.multiplier) state.multIdx++;
+      }
+    }
+
+    if (spin.freeSpinsRemaining !== null) state.freeSpins = spin.freeSpinsRemaining;
+    updateUI(Math.round(runningMult * amount));
+
+    // Tell the RGS how far the round got, so a disconnect resumes here.
+    if (next && StakeRGS.isLiveRGS && !state.replayMode) {
+      StakeRGS.sendEvent(next.eventIndex).catch(e => console.warn('[Aether Dial] bet/event failed', e));
+    }
+    if (next) await sleep(480);
   }
+  state.winningPointers = [];
+  state.freeSpins = 0;
+}
+
+// Runs a full RGS round: animation, end-round (only when there is a win),
+// balance from the RGS, history entry.
+async function runRound(round, { fromEvent = 0, label = 'BASE' } = {}) {
+  const isBonusRound = round.spins.length > 1;
+  const live = !state.replayMode;
+  let endRoundPromise = null;
+
+  // Single-spin wins are settled right away (balance shown after the animation);
+  // bonus rounds are settled at the end so they can be resumed.
+  if (live && round.payoutUnits > 0 && !isBonusRound) {
+    endRoundPromise = StakeRGS.endRound().catch(err => ({ error: err }));
+  }
+
+  await playRoundOnStage(round, fromEvent);
+
+  // The RGS payout is the authority for the displayed win.
+  updateUI(round.payoutUnits);
+  if (round.payoutMult >= 15) await showBigWinCelebration(round.payoutUnits, round.payoutMult);
+
+  if (live && round.payoutUnits > 0) {
+    const res = endRoundPromise ? await endRoundPromise : await StakeRGS.endRound().catch(err => ({ error: err }));
+    if (res && res.balance) state.balance = Number(res.balance.amount);
+    else showRgsError(res && res.error);
+  }
+
+  statusBanner.textContent = round.payoutUnits > 0
+    ? `ROUND WIN: ${money(round.payoutUnits)}`
+    : 'PRESS SPIN OR HOLD SPACEBAR FOR AUTO';
+  updateUI(round.payoutUnits);
+
+  if (!state.replayMode) recordRound(round, label);
 }
 
 async function handleSpin(isBonusBuy = false) {
-  if (state.isSpinning) return;
+  if (state.isSpinning || state.replayMode) return;
   const bet = getBet();
-  const isFree = state.freeSpins > 0;
-  const cost = isBonusBuy ? bet * BONUS_BUY_MULT : (isFree ? 0 : bet);
+  const mode = isBonusBuy ? MODE_BONUS : MODE_BASE;
+  const cost = isBonusBuy ? bet * BONUS_BUY_MULT : bet;
 
+  if (!bet) return;
   if (state.balance < cost) {
-    statusBanner.textContent = state.socialMode ? 'INSUFFICIENT COINS' : 'INSUFFICIENT CREDIT';
+    statusBanner.textContent = state.socialMode ? 'INSUFFICIENT COINS' : 'INSUFFICIENT BALANCE';
     stopAllAutoplay();
     return;
   }
@@ -680,114 +842,55 @@ async function handleSpin(isBonusBuy = false) {
   state.isSpinning = true;
   state.winningPointers = [];
   state.scatterCoords = [];
-
-  if (isBonusBuy) {
-    SoundFX.play('buybonus', 1.0, 0.9);
-  }
-
-  if (isFree) {
-    state.freeSpins--;
-    statusBanner.textContent = `★ FREE SPINS BONUS MODE (${state.freeSpins} LEFT) ★`;
-  } else {
-    state.balance -= cost;
-    state.multIdx = 0;
-    statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ SCATTER KEYS...' : 'WINDING CHRONOGRAPH GEARS...';
-  }
+  state.multIdx = 0;
+  if (isBonusBuy) SoundFX.play('buybonus', 1.0, 0.9);
+  statusBanner.textContent = isBonusBuy ? 'SUMMONING 3+ SCATTER KEYS...' : 'WINDING CHRONOGRAPH GEARS...';
   updateUI(0);
 
-  const L = RING_OUTER.length;
-  if (isBonusBuy) {
-    const pos = pickBonusTriggerPositions(L);
-    state.posOut = pos.o;
-    state.posMid = pos.m;
-    state.posIn = pos.i;
-  } else {
-    state.posOut = Math.floor(Math.random() * L);
-    state.posMid = Math.floor(Math.random() * L);
-    state.posIn = Math.floor(Math.random() * L);
+  let data;
+  try {
+    data = await StakeRGS.play(bet, mode);
+  } catch (err) {
+    showRgsError(err);
+    state.isSpinning = false;
+    updateUI();
+    return;
   }
 
-  await animateRotation(1150, Math.PI * 2, -Math.PI * 2, Math.PI * 2);
+  if (data.balance) state.balance = Number(data.balance.amount);
+  updateUI(0);
 
-  let roundTotalMult = 0;
-  let step = 0;
-
-  while (step < 25) {
-    const sOut = getVisibleRing(RING_OUTER, state.posOut);
-    const sMid = getVisibleRing(RING_MIDDLE, state.posMid);
-    const sIn = getVisibleRing(RING_INNER, state.posIn);
-
-    const res = evaluatePointers(sOut, sMid, sIn);
-
-    if (step === 0 && res.keyCount >= 3) {
-      const award = isFree ? 5 : 8;
-      state.freeSpins += award;
-      statusBanner.textContent = isFree
-        ? `★ 3+ KEYS! +5 EXTRA FREE SPINS AWARDED! ★`
-        : `★ 3+ KEYS SCATTER! 8 FREE SPINS UNLOCKED! ★`;
-      updateUI(roundTotalMult * bet);
-      await showScatter3DCelebration(res.keyPositions, award, isFree);
+  let round;
+  try {
+    round = StakeRGS.normalizeRound({ amount: bet, mode, ...data.round });
+  } catch (err) {
+    showRgsError(err);
+    // Never leave a paid round unsettled, even if it cannot be drawn.
+    if (data.round && Number(data.round.payout || data.round.payoutMultiplier) > 0) {
+      const res = await StakeRGS.endRound().catch(e => ({ error: e }));
+      if (res && res.balance) state.balance = Number(res.balance.amount);
     }
-
-    if (res.hasWin) {
-      state.winningPointers = res.matchedPointers;
-      SoundFX.play('win', 1 + state.multIdx * 0.05, 0.85);
-
-      const activeMult = MULTIPLIERS[Math.min(state.multIdx, MULTIPLIERS.length - 1)];
-      const stepWinMult = res.winBase * activeMult;
-      roundTotalMult = Math.min(roundTotalMult + stepWinMult, MAX_WIN_MULT);
-
-      statusBanner.textContent = `ALIGNED! ${res.winBase.toFixed(2)}x × ${activeMult}x ALCHEMY = ${(roundTotalMult * bet).toFixed(2)}`;
-      updateUI(roundTotalMult * bet);
-      await sleep(700);
-
-      state.multIdx++;
-      state.winningPointers = [];
-      state.posOut = (state.posOut - 1 + L) % L;
-      state.posMid = (state.posMid - 2 + L) % L;
-      state.posIn = (state.posIn - 3 + L) % L;
-
-      await animateRotation(520, Math.PI / 6, (Math.PI / 6) * 2, (Math.PI / 6) * 3);
-      step++;
-    } else {
-      break;
-    }
+    state.isSpinning = false;
+    updateUI();
+    return;
   }
 
-  const finalWin = roundTotalMult * bet;
-  state.balance += finalWin;
-  updateUI(finalWin);
-
-  if (roundTotalMult >= 15) {
-    await showBigWinCelebration(finalWin, roundTotalMult);
-  }
-
-  if (finalWin > 0) {
-    statusBanner.textContent = `ROUND WIN: ${finalWin.toFixed(2)} (${roundTotalMult.toFixed(2)}x)`;
-  } else if (state.freeSpins > 0) {
-    statusBanner.textContent = `★ FREE SPINS BONUS ACTIVE — ${state.freeSpins} REMAINING ★`;
-  } else {
-    statusBanner.textContent = 'PRESS SPIN OR HOLD SPACEBAR FOR AUTO';
-  }
-
+  await runRound(round, { label: isBonusBuy ? 'BONUS BUY' : 'BASE SPIN' });
   state.isSpinning = false;
   updateUI();
+  continueAutoplay();
+}
 
-  if (state.freeSpins > 0) {
-    await sleep(480);
-    handleSpin(false);
-  } else if (state.spaceHoldAuto) {
+async function continueAutoplay() {
+  if (state.spaceHoldAuto) {
     await sleep(280);
     if (state.spaceHoldAuto) handleSpin(false);
   } else if (state.autoRemaining > 0) {
     state.autoRemaining--;
     updateUI();
     await sleep(380);
-    if (state.autoRemaining > 0) {
-      handleSpin(false);
-    } else {
-      stopAllAutoplay();
-    }
+    if (state.autoRemaining > 0) handleSpin(false);
+    else stopAllAutoplay();
   }
 }
 
@@ -1079,19 +1182,23 @@ function renderLoop() {
 // CONTROLS & KEYBOARD
 // ============================================================================
 btnSpin.addEventListener('click', () => {
+  if (state.replayMode) {
+    playStakeReplay();
+    return;
+  }
   if (isAutoActive()) stopAllAutoplay();
   handleSpin(false);
 });
 
 document.getElementById('btn-bet-up').addEventListener('click', () => {
-  if (!state.isSpinning && state.betIdx < BET_LEVELS.length - 1) {
+  if (!state.isSpinning && !state.replayMode && state.betIdx < state.betLevels.length - 1) {
     state.betIdx++;
     updateUI();
   }
 });
 
 document.getElementById('btn-bet-down').addEventListener('click', () => {
-  if (!state.isSpinning && state.betIdx > 0) {
+  if (!state.isSpinning && !state.replayMode && state.betIdx > 0) {
     state.betIdx--;
     updateUI();
   }
@@ -1117,7 +1224,7 @@ btnAutoplay.addEventListener('click', () => {
     stopAllAutoplay();
     return;
   }
-  if (!state.isSpinning && state.freeSpins === 0) {
+  if (!state.isSpinning && !state.replayMode && state.freeSpins === 0) {
     autoplayModal.classList.remove('hidden');
   }
 });
@@ -1135,9 +1242,9 @@ document.querySelectorAll('.auto-choice').forEach(btn => {
 });
 
 btnBonusBuy.addEventListener('click', () => {
-  if (state.isSpinning || state.freeSpins > 0 || isAutoActive()) return;
+  if (btnBonusBuy.disabled) return;
   document.getElementById('modal-buy-heading').textContent = state.socialMode ? 'GET FREE SPINS' : 'BUY FREE SPINS';
-  document.getElementById('modal-buy-cost-val').textContent = (getBet() * BONUS_BUY_MULT).toFixed(2);
+  document.getElementById('modal-buy-cost-val').textContent = money(getBet() * BONUS_BUY_MULT);
   buyModal.classList.remove('hidden');
 });
 
@@ -1156,6 +1263,7 @@ document.getElementById('btn-info-close').addEventListener('click', () => infoMo
 let spaceHoldTimer = null;
 window.addEventListener('keydown', (e) => {
   if (e.code !== 'Space') return;
+  if (state.replayMode || (state.jurisdiction && state.jurisdiction.disabledSpacebar)) return;
   if (!buyModal.classList.contains('hidden') || !infoModal.classList.contains('hidden') || !autoplayModal.classList.contains('hidden')) return;
   e.preventDefault();
   if (e.repeat) return;
@@ -1168,6 +1276,7 @@ window.addEventListener('keydown', (e) => {
   handleSpin(false);
 
   spaceHoldTimer = setTimeout(() => {
+    if (state.jurisdiction && state.jurisdiction.disabledAutoplay) return;
     state.spaceHoldAuto = true;
     updateUI();
     if (!state.isSpinning) handleSpin(false);
@@ -1182,12 +1291,13 @@ window.addEventListener('keyup', (e) => {
 });
 
 // ============================================================================
-// PRAGMATIC-STYLE COMPACT SQUARE LIVE REPLAY ARCHIVE
+// SESSION HISTORY REPLAY (compact square viewer)
+// Re-plays rounds of this session from the stored RGS round data.
 // ============================================================================
 const sessionRoundsHistory = [];
-let activeRecording = null;
 let selectedReplayRound = null;
 let replayAbortFlag = false;
+let replayRunId = 0;
 
 const btnReplay = document.getElementById('btn-replay');
 const replayModal = document.getElementById('replay-modal');
@@ -1196,162 +1306,134 @@ const replayCanvas = document.getElementById('replay-canvas');
 const repCtx = replayCanvas.getContext('2d');
 btnReplay.disabled = true;
 
-const originalHandleSpin = handleSpin;
-handleSpin = async function (isBonusBuy = false) {
-  if (state.isSpinning) return;
-
-  const isContinuationFreeSpin = state.freeSpins > 0 && activeRecording !== null;
-
-  if (!isContinuationFreeSpin) {
-    activeRecording = {
-      roundNumber: sessionRoundsHistory.length + 1,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      mode: isBonusBuy ? 'BONUS BUY' : 'BASE SPIN',
-      bet: getBet(),
-      totalWin: 0,
-      steps: []
-    };
-  }
-
-  if (window.StakeRGS && window.StakeRGS.isLiveRGS && !isContinuationFreeSpin) {
-    try {
-      await window.StakeRGS.requestPlay(getBet(), isBonusBuy ? 'BONUS_BUY' : 'BASE');
-    } catch (e) {
-      statusBanner.textContent = 'RGS CONNECTION ERROR';
-      return;
-    }
-  }
-
-  const balBefore = state.balance;
-  await originalHandleSpin(isBonusBuy);
-
-  const wagerDeducted = isContinuationFreeSpin ? 0 : (isBonusBuy ? getBet() * BONUS_BUY_MULT : getBet());
-  const spinNetWin = Math.max(0, Number((state.balance - (balBefore - wagerDeducted)).toFixed(2)));
-
-  const sOut = getVisibleRing(RING_OUTER, state.posOut);
-  const sMid = getVisibleRing(RING_MIDDLE, state.posMid);
-  const sIn = getVisibleRing(RING_INNER, state.posIn);
-  const evalSnap = evaluatePointers(sOut, sMid, sIn);
-
-  if (activeRecording) {
-    activeRecording.steps.push({
-      posOut: state.posOut,
-      posMid: state.posMid,
-      posIn: state.posIn,
-      multIdx: state.multIdx,
-      freeSpinsLeft: state.freeSpins,
-      winAmount: spinNetWin,
-      winningPointers: evalSnap.matchedPointers,
-      scatterCoords: evalSnap.keyCount >= 3 ? evalSnap.keyPositions : [],
-      triggeredFreeSpins: evalSnap.keyCount >= 3
-    });
-    activeRecording.totalWin = Number((activeRecording.totalWin + spinNetWin).toFixed(2));
-
-    if (state.freeSpins === 0) {
-      sessionRoundsHistory.unshift(activeRecording);
-      activeRecording = null;
-      btnReplay.disabled = false;
-      if (window.StakeRGS && window.StakeRGS.isLiveRGS) {
-        await window.StakeRGS.endRound();
-      }
-    }
-  }
-};
+function recordRound(round, label) {
+  sessionRoundsHistory.unshift({
+    roundNumber: sessionRoundsHistory.length + 1,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    mode: label,
+    bet: round.amount,
+    totalWin: round.payoutUnits,
+    round
+  });
+  if (sessionRoundsHistory.length > 50) sessionRoundsHistory.pop();
+  btnReplay.disabled = false;
+}
 
 function populateReplayDropdown() {
   replayRoundSelect.innerHTML = '';
   sessionRoundsHistory.forEach((rec, idx) => {
     const opt = document.createElement('option');
     opt.value = idx;
-    opt.textContent = `#${rec.roundNumber} [${rec.timestamp}] ${rec.mode} (${rec.steps.length} Spin) — Win: ${rec.totalWin.toFixed(2)}`;
+    opt.textContent = `#${rec.roundNumber} [${rec.timestamp}] ${rec.mode} (${rec.round.spins.length} Spin) — Win: ${money(rec.totalWin)}`;
     replayRoundSelect.appendChild(opt);
   });
 }
 
 async function playPragmaticReplay(record) {
-  if (!record || !record.steps.length) return;
-  replayAbortFlag = true;
-  await new Promise(r => setTimeout(r, 40));
+  if (!record || !record.round.spins.length) return;
+  const runId = ++replayRunId;
   replayAbortFlag = false;
+  const aborted = () => replayAbortFlag || runId !== replayRunId;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
   selectedReplayRound = record;
 
   replayModal.classList.remove('hidden');
   const celebBox = document.getElementById('pr-celebration');
   celebBox.classList.add('hidden');
 
+  const round = record.round;
   document.getElementById('rep-mode').textContent = record.mode;
-  document.getElementById('rep-bet').textContent = record.bet.toFixed(2);
-  document.getElementById('rep-total-win').textContent = '0.00';
+  document.getElementById('rep-bet').textContent = money(record.bet);
+  document.getElementById('rep-total-win').textContent = money(0);
 
-  let runningTotal = 0;
+  let runningMult = 0;
+  let freeSpins = 0;
+  let multIdx = 0;
+  const total = round.spins.length;
 
-  for (let i = 0; i < record.steps.length; i++) {
-    if (replayAbortFlag) return;
-    const step = record.steps[i];
-    const multVal = MULTIPLIERS[Math.min(step.multIdx, MULTIPLIERS.length - 1)];
+  for (let i = 0; i < total; i++) {
+    if (aborted()) return;
+    const spin = round.spins[i];
+    if (spin.isFree) freeSpins = Math.max(0, freeSpins - 1);
+    else multIdx = 0;
 
-    document.getElementById('pr-hud-fs').textContent = `FREE SPINS: ${step.freeSpinsLeft}`;
-    document.getElementById('pr-hud-mult').textContent = `MULT: ${multVal}x`;
-    document.getElementById('pr-step-txt').textContent = `${i + 1} / ${record.steps.length}`;
-    document.getElementById('pr-hud-status').textContent = `SPIN ${i + 1} OF ${record.steps.length}`;
+    document.getElementById('pr-step-txt').textContent = `${i + 1} / ${total}`;
+    document.getElementById('pr-hud-status').textContent = `SPIN ${i + 1} OF ${total}`;
 
-    SoundFX.play('spin', 1.1, 0.65);
-    const spinFrames = 18;
-    for (let f = 1; f <= spinFrames; f++) {
-      if (replayAbortFlag) return;
-      const t = f / spinFrames;
-      const ease = 1 - Math.pow(1 - t, 3);
-      const rot = (1 - ease) * Math.PI * 2;
-      drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
-        posOut: step.posOut,
-        posMid: step.posMid,
-        posIn: step.posIn,
-        rotOut: rot,
-        rotMid: -rot,
-        rotIn: rot,
-        coreAngle: f * 0.15,
-        freeSpins: step.freeSpinsLeft,
+    for (let c = 0; c < spin.cascades.length; c++) {
+      if (aborted()) return;
+      const cas = spin.cascades[c];
+      if (cas.multiplier) multIdx = multIdxFor(cas.multiplier, multIdx);
+      const multVal = cas.multiplier || MULTIPLIERS[Math.min(multIdx, MULTIPLIERS.length - 1)];
+      const snapBase = {
+        posOut: cas.positions[0],
+        posMid: cas.positions[1],
+        posIn: cas.positions[2],
+        freeSpins,
         winningPointers: [],
         scatterCoords: []
+      };
+
+      document.getElementById('pr-hud-fs').textContent = `FREE SPINS: ${freeSpins}`;
+      document.getElementById('pr-hud-mult').textContent = `MULT: ${multVal}x`;
+
+      SoundFX.play('spin', 1.1, 0.65);
+      const spinFrames = c === 0 ? 18 : 10;
+      for (let f = 1; f <= spinFrames; f++) {
+        if (aborted()) return;
+        const t = f / spinFrames;
+        const ease = 1 - Math.pow(1 - t, 3);
+        const rot = (1 - ease) * (c === 0 ? Math.PI * 2 : Math.PI / 6);
+        drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
+          ...snapBase, rotOut: rot, rotMid: c === 0 ? -rot : rot * 2, rotIn: c === 0 ? rot : rot * 3, coreAngle: f * 0.15
+        });
+        await wait(26);
+      }
+
+      const res = evaluatePointers(
+        getVisibleRing(RING_OUTER, cas.positions[0]),
+        getVisibleRing(RING_MIDDLE, cas.positions[1]),
+        getVisibleRing(RING_INNER, cas.positions[2])
+      );
+      const triggered = c === 0 && spin.freeSpinsAwarded > 0;
+      if (triggered) {
+        freeSpins = spin.freeSpinsRemaining !== null ? spin.freeSpinsRemaining : freeSpins + spin.freeSpinsAwarded;
+      }
+
+      drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
+        ...snapBase,
+        freeSpins,
+        rotOut: 0, rotMid: 0, rotIn: 0, coreAngle: 0.5,
+        winningPointers: cas.winMult > 0 ? (cas.matchedPointers || res.matchedPointers) : [],
+        scatterCoords: triggered ? res.keyPositions : []
       });
-      await new Promise(r => setTimeout(r, 26));
-    }
 
-    // Settled frame with exact winning frames & scatter beams
-    drawClockworkDialScene(repCtx, replayCanvas.width, replayCanvas.height, {
-      posOut: step.posOut,
-      posMid: step.posMid,
-      posIn: step.posIn,
-      rotOut: 0,
-      rotMid: 0,
-      rotIn: 0,
-      coreAngle: 0.5,
-      freeSpins: step.freeSpinsLeft,
-      winningPointers: step.winningPointers,
-      scatterCoords: step.scatterCoords
-    });
-
-    if (step.triggeredFreeSpins) {
-      SoundFX.play(i === 0 ? 'scatter' : 'retrigger', 1.0, 0.9);
-      document.getElementById('pr-celeb-title').textContent = i === 0 ? 'SCATTER!' : 'RETRIGGER!';
-      document.getElementById('pr-celeb-val').textContent = i === 0 ? '+8 FREE SPINS' : '+5 FREE SPINS';
-      celebBox.classList.remove('hidden');
-      await new Promise(r => setTimeout(r, 1100));
-      celebBox.classList.add('hidden');
-    } else if (step.winAmount > 0) {
-      SoundFX.play('win', 1 + step.multIdx * 0.05, 0.85);
-      runningTotal = Number((runningTotal + step.winAmount).toFixed(2));
-      document.getElementById('rep-total-win').textContent = runningTotal.toFixed(2);
-      document.getElementById('pr-hud-status').textContent = `WIN: +${step.winAmount.toFixed(2)} (${multVal}x)`;
-      await new Promise(r => setTimeout(r, 950));
-    } else {
-      SoundFX.play('stop', 1.0, 0.7);
-      await new Promise(r => setTimeout(r, 700));
+      if (triggered) {
+        SoundFX.play(spin.isFree ? 'retrigger' : 'scatter', 1.0, 0.9);
+        document.getElementById('pr-celeb-title').textContent = spin.isFree ? 'RETRIGGER!' : 'SCATTER!';
+        document.getElementById('pr-celeb-val').textContent = `+${spin.freeSpinsAwarded} FREE SPINS`;
+        document.getElementById('pr-hud-fs').textContent = `FREE SPINS: ${freeSpins}`;
+        celebBox.classList.remove('hidden');
+        await wait(1100);
+        celebBox.classList.add('hidden');
+      }
+      if (cas.winMult > 0) {
+        SoundFX.play('win', 1 + multIdx * 0.05, 0.85);
+        runningMult += cas.winMult;
+        document.getElementById('rep-total-win').textContent = money(Math.round(runningMult * record.bet));
+        document.getElementById('pr-hud-status').textContent = `WIN: +${money(Math.round(cas.winMult * record.bet))} (${multVal}x)`;
+        if (!cas.multiplier) multIdx++;
+        await wait(950);
+      } else if (!triggered) {
+        SoundFX.play('stop', 1.0, 0.7);
+        await wait(500);
+      }
     }
+    if (spin.freeSpinsRemaining !== null) freeSpins = spin.freeSpinsRemaining;
   }
 
-  document.getElementById('rep-total-win').textContent = record.totalWin.toFixed(2);
-  document.getElementById('pr-hud-status').textContent = `ROUND COMPLETE — TOTAL WIN: ${record.totalWin.toFixed(2)}`;
+  document.getElementById('rep-total-win').textContent = money(record.totalWin);
+  document.getElementById('pr-hud-status').textContent = `ROUND COMPLETE — TOTAL WIN: ${money(record.totalWin)}`;
 }
 
 function closeReplayModal() {
@@ -1360,7 +1442,7 @@ function closeReplayModal() {
 }
 
 btnReplay.addEventListener('click', () => {
-  if (!state.isSpinning && sessionRoundsHistory.length > 0 && state.freeSpins === 0) {
+  if (!state.isSpinning && sessionRoundsHistory.length > 0) {
     populateReplayDropdown();
     playPragmaticReplay(sessionRoundsHistory[0]);
   }
@@ -1368,9 +1450,7 @@ btnReplay.addEventListener('click', () => {
 
 replayRoundSelect.addEventListener('change', (e) => {
   const idx = parseInt(e.target.value, 10);
-  if (sessionRoundsHistory[idx]) {
-    playPragmaticReplay(sessionRoundsHistory[idx]);
-  }
+  if (sessionRoundsHistory[idx]) playPragmaticReplay(sessionRoundsHistory[idx]);
 });
 
 document.getElementById('btn-replay-restart').addEventListener('click', () => {
@@ -1378,25 +1458,117 @@ document.getElementById('btn-replay-restart').addEventListener('click', () => {
 });
 document.getElementById('btn-replay-close').addEventListener('click', closeReplayModal);
 
-(async function bootStakeSession() {
-  if (!window.StakeRGS) return;
-  const session = await window.StakeRGS.init();
-  state.balance = session.balance;
-  if (session.social) state.socialMode = true;
-  if (session.replay) {
-    document.getElementById('replay-ribbon').classList.remove('hidden');
-    const parsed = window.StakeRGS.parseReplayData();
-    if (parsed && parsed.steps) {
-      parsed.roundNumber = parsed.roundNumber || 1;
-      parsed.timestamp = parsed.timestamp || 'CERTIFIED';
-      sessionRoundsHistory.unshift(parsed);
-      btnReplay.disabled = false;
-      populateReplayDropdown();
-      setTimeout(() => playPragmaticReplay(parsed), 500);
+// ============================================================================
+// STAKE ENGINE REPLAY MODE (?replay=true&game=&version=&mode=&event=&amount=&rgs_url=)
+// Fetches GET /bet/replay/{game}/{version}/{mode}/{event} and plays it on the
+// main stage. No wallet calls are made in this mode.
+// ============================================================================
+let stakeReplayRound = null;
+
+async function playStakeReplay() {
+  if (!stakeReplayRound || state.isSpinning) return;
+  state.isSpinning = true;
+  updateUI(0);
+  await runRound(stakeReplayRound);
+  statusBanner.textContent = 'REPLAY COMPLETE — PRESS SPIN TO WATCH AGAIN';
+  state.isSpinning = false;
+  updateUI(stakeReplayRound.payoutUnits);
+}
+
+async function bootReplayMode() {
+  state.replayMode = true;
+  document.getElementById('replay-ribbon').classList.remove('hidden');
+  btnReplay.classList.add('hidden');
+  const p = StakeRGS.replayParams;
+  state.currency = StakeRGS.currency;
+  state.socialMode = StakeRGS.isSocialParam;
+  state.betLevels = [p.amount];
+  state.betIdx = 0;
+  statusBanner.textContent = 'LOADING REPLAY...';
+  updateUI(0);
+  try {
+    const data = await StakeRGS.fetchReplay();
+    const roundData = data && data.round ? data.round : data;
+    stakeReplayRound = StakeRGS.normalizeRound({ amount: p.amount, mode: p.mode, ...roundData });
+    if (!stakeReplayRound.amount) stakeReplayRound.amount = p.amount;
+    if (!stakeReplayRound.payoutUnits && stakeReplayRound.payoutMult) {
+      stakeReplayRound.payoutUnits = Math.round(stakeReplayRound.payoutMult * stakeReplayRound.amount);
+    }
+    await playStakeReplay();
+  } catch (err) {
+    showRgsError(err);
+  }
+}
+
+// ============================================================================
+// SESSION BOOT: authenticate, bet levels from RGS config, resume active round
+// ============================================================================
+function applyAuthConfig(data) {
+  if (data.balance) {
+    state.balance = Number(data.balance.amount) || 0;
+    state.currency = data.balance.currency || state.currency;
+  }
+  const cfg = data.config || {};
+  state.jurisdiction = cfg.jurisdiction || {};
+  let levels = Array.isArray(cfg.betLevels) ? cfg.betLevels.map(Number) : [];
+  if (cfg.minBet !== undefined) levels = levels.filter(l => l >= cfg.minBet);
+  if (cfg.maxBet !== undefined) levels = levels.filter(l => l <= cfg.maxBet);
+  if (cfg.stepBet) levels = levels.filter(l => l % cfg.stepBet === 0);
+  if (levels.length === 0 && cfg.minBet) levels = [Number(cfg.minBet)];
+  state.betLevels = levels;
+  const def = levels.indexOf(Number(cfg.defaultBetLevel));
+  state.betIdx = def >= 0 ? def : 0;
+  state.socialMode = StakeRGS.isSocialParam || state.jurisdiction.socialCasino === true;
+}
+
+async function bootStakeSession() {
+  await StakeRGS.init();
+  if (StakeRGS.isReplay && StakeRGS.isLiveRGS) {
+    await bootReplayMode();
+    return;
+  }
+
+  let data;
+  try {
+    data = await StakeRGS.authenticate();
+  } catch (err) {
+    showRgsError(err);
+    return;
+  }
+  applyAuthConfig(data);
+  updateUI(0);
+
+  const r = data.round;
+  if (r && Array.isArray(r.state) && r.state.length > 0) {
+    let round;
+    try {
+      round = StakeRGS.normalizeRound(r);
+    } catch (err) {
+      showRgsError(err);
+      return;
+    }
+    if (r.amount) {
+      const idx = state.betLevels.indexOf(Number(r.amount));
+      if (idx >= 0) state.betIdx = idx;
+    }
+    if (r.active === true) {
+      // Unfinished round: play it out from the last recorded event, then settle.
+      statusBanner.textContent = 'RESUMING YOUR UNFINISHED ROUND...';
+      state.isSpinning = true;
+      updateUI(0);
+      await sleep(600);
+      await runRound(round, { fromEvent: round.resumeFromEvent, label: 'RESUMED' });
+      state.isSpinning = false;
+      updateUI();
+    } else {
+      // Last finished round: show its final board.
+      const lastSpin = round.spins[round.spins.length - 1];
+      const lastCas = lastSpin.cascades[lastSpin.cascades.length - 1];
+      if (lastCas) setRingPositions(lastCas.positions);
     }
   }
-  updateUI(0);
-})();
+}
+
 // Mobile Touch Audio Unlocker (ensures first tap plays spin.mp3 without delay)
 ['touchstart', 'pointerdown'].forEach(evt => {
   window.addEventListener(evt, () => SoundFX.init(), { once: true, passive: true });
@@ -1404,3 +1576,4 @@ document.getElementById('btn-replay-close').addEventListener('click', closeRepla
 initVisualGuides();
 updateUI(0);
 requestAnimationFrame(renderLoop);
+bootStakeSession();
