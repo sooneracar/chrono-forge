@@ -291,7 +291,11 @@
           stepBet: 100000,
           defaultBetLevel: 1000000,
           betLevels: DEMO_BET_LEVELS.slice(),
-          jurisdiction: { socialCasino: false }
+          // demo only offers the modes whose books were exported
+          jurisdiction: {
+            socialCasino: false,
+            disabledBuyFeature: !this.manifest.modes.some(m => m.name.toLowerCase() === 'bonus')
+          }
         },
         round: this.activeRound
       };

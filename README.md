@@ -15,4 +15,8 @@
   This writes `frontend/demo/manifest.json` and `frontend/demo/books_<mode>.json`.
 - **Replay:** `?replay=true&rgs_url=…&game=…&version=…&mode=…&event=…&amount=…`
   → `GET https://{rgs_url}/bet/replay/{game}/{version}/{mode}/{event}`.
+- `math/publish_files/` holds the math files published on Stake (Version 2):
+  base RTP 96.3587%, bonus RTP 96.3397% (computed from the lookup tables).
+  `books_bonus.jsonl` is not in the repo yet. The bonus line in
+  `rtp_certification_report.json` (25.56%) is stale and does not match the CSV.
 - `math/generate_lookup.py` is an **old** math version and is not what is published on Stake.

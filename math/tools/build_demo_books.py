@@ -11,7 +11,7 @@ lookup-table weight, so the browser demo can pick uniformly and still follow
 the published distribution. The demo never generates outcomes itself.
 
 Usage:
-    pip install zstandard
+    pip install zstandard   # only needed for .jsonl.zst
     python math/tools/build_demo_books.py math/publish_files --samples 2000
 """
 import argparse
@@ -22,12 +22,17 @@ import random
 from pathlib import Path
 
 
-def read_jsonl_zst(path: Path):
-    import zstandard  # pip install zstandard
+def read_books(path: Path):
+    """Yield books from a .jsonl or .jsonl.zst file."""
+    if path.suffix == ".zst":
+        import zstandard  # pip install zstandard
 
-    with path.open("rb") as fh:
-        reader = zstandard.ZstdDecompressor().stream_reader(fh)
-        for line in io.TextIOWrapper(reader, encoding="utf-8"):
+        fh = path.open("rb")
+        stream = io.TextIOWrapper(zstandard.ZstdDecompressor().stream_reader(fh), encoding="utf-8")
+    else:
+        stream = path.open(encoding="utf-8")
+    with stream:
+        for line in stream:
             line = line.strip()
             if line:
                 yield json.loads(line)
@@ -60,12 +65,16 @@ def main():
     manifest = {"source": "index.json", "modes": []}
 
     for mode in index["modes"]:
+        events_path = args.math_dir / mode["events"]
+        if not events_path.exists():
+            print(f"{mode['name']}: {events_path.name} not found - mode skipped in demo")
+            continue
         ids, weights, payouts = read_weights(args.math_dir / mode["weights"])
         wanted = rng.choices(ids, weights=weights, k=args.samples)
         wanted_set = set(wanted)
 
         books = {}
-        for book in read_jsonl_zst(args.math_dir / mode["events"]):
+        for book in read_books(events_path):
             if book["id"] in wanted_set:
                 if int(book["payoutMultiplier"]) != payouts[book["id"]]:
                     raise SystemExit(f"payout mismatch for book {book['id']} in mode {mode['name']}")

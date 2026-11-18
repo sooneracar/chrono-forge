@@ -1,0 +1,10 @@
+{
+  "source": "index.json",
+  "modes": [
+    {
+      "name": "base",
+      "cost": 1.0,
+      "file": "books_base.json"
+    }
+  ]
+}

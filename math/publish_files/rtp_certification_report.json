@@ -1,0 +1,23 @@
+{
+  "gameTitle": "AETHER DIAL",
+  "version": "1.0.0",
+  "maxWinCap": 5000.0,
+  "modes": [
+    {
+      "mode": "BASE",
+      "simulatedRounds": 100000,
+      "costMultiplier": 1.0,
+      "simulatedRTP": 96.36,
+      "hitFrequencyPct": 31.28,
+      "maxObservedMultiplier": 2336.95
+    },
+    {
+      "mode": "BONUS",
+      "simulatedRounds": 25000,
+      "costMultiplier": 100.0,
+      "simulatedRTP": 25.56,
+      "hitFrequencyPct": 95.67,
+      "maxObservedMultiplier": 3053.75
+    }
+  ]
+}
