@@ -3,7 +3,7 @@
     {
       "name": "base",
       "cost": 1.0,
-      "events": "books_base.jsonl",
+      "events": "books_base.jsonl.zst",
       "weights": "lookup_table_base.csv"
     },
     {
